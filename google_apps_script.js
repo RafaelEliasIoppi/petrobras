@@ -32,19 +32,16 @@ function onOpen() {
 
 // ── Monta a aba RECUSAS ──────────────────────────────────────
 // Estrutura (8 colunas, A-H):
-//   A-D : OLHO DIREITO  → RGCT | NOME | MOTIVO DE RECUSA | EQUIPE
-//   E-H : OLHO ESQUERDO → RGCT | NOME | MOTIVO DE RECUSA | EQUIPE
+//   A-D : OLHO DIREITO  → RGCT | NOME | RECUSA | EQUIPE
+//   E-H : OLHO ESQUERDO → RGCT | NOME | RECUSA | EQUIPE
 function montarAbaRecusas() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
 
-  let ws = ss.getSheetByName("RECUSAS");
-  if (!ws) {
-    ws = ss.insertSheet("RECUSAS");
-    ws.setTabColor("#C00000");
-  } else {
-    ws.clearContents();
-    ws.clearFormats();
-  }
+  // Apaga e recria a aba do zero — sem resíduo de formatação antiga
+  const wsAntiga = ss.getSheetByName("RECUSAS");
+  if (wsAntiga) ss.deleteSheet(wsAntiga);
+  const ws = ss.insertSheet("RECUSAS");
+  ws.setTabColor("#C00000");
 
   // Linha 1 — título geral
   ws.getRange("A1:H1").merge()
@@ -70,8 +67,8 @@ function montarAbaRecusas() {
 
   // Linha 3 — cabeçalhos das colunas
   const CABS = [
-    "RGCT","NOME","MOTIVO DE RECUSA","EQUIPE",
-    "RGCT","NOME","MOTIVO DE RECUSA","EQUIPE",
+    "RGCT","NOME","RECUSA","EQUIPE",
+    "RGCT","NOME","RECUSA","EQUIPE",
   ];
   const CORES = [
     "#244F7A","#244F7A","#C00000","#2E75B6",
@@ -114,7 +111,7 @@ function montarAbaRecusas() {
     "✔ Aba RECUSAS montada!\n\n" +
     "Colunas A-D: OLHO DIREITO\n" +
     "Colunas E-H: OLHO ESQUERDO\n\n" +
-    "Cada bloco: RGCT | NOME | MOTIVO | EQUIPE\n\n" +
+    "Cada bloco: RGCT | NOME | RECUSA | EQUIPE\n\n" +
     "Use ⚕ RECUSAS → Registrar recusa para adicionar."
   );
 }
