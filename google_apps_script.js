@@ -78,7 +78,6 @@ function montarAbaRecusas() {
     "#1A3A5C","#1A3A5C","#9B0000","#1F5C96",
   ];
 
-  const borda = SpreadsheetApp.newBorderStyle ? null : null; // placeholder
   CABS.forEach((nome, i) => {
     ws.getRange(3, i + 1)
       .setValue(nome)
@@ -141,7 +140,7 @@ function salvarRecusa(dados) {
   let wsRec = ss.getSheetByName("RECUSAS");
   if (!wsRec) { montarAbaRecusas(); wsRec = ss.getSheetByName("RECUSAS"); }
 
-  const proxima = Math.max(wsRec.getLastRow() + 1, 4);
+  const proxima = Math.max(wsRec.getLastRow() + 1, 4); // linha 4 em diante — 1,2,3 são cabeçalho
 
   wsRec.getRange(proxima, 1, 1, 8).setValues([[
     dados.rgct_od, dados.nome_od, dados.mr_od, dados.eq_od,
