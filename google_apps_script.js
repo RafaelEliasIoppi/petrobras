@@ -3,13 +3,26 @@
 // Cola este código no editor e salva (Ctrl+S)
 // O menu "OFERTAS" aparecerá na planilha automaticamente
 // ============================================================
+//
+// Estrutura OFERTAS (linha 2 = cabeçalho, linhas 3-14 = dados):
+//   A  : RGCT
+//   B  : OFERTA OLHO DIREITO
+//   C  : HOSPITAL
+//   D  : EQUIPE         ← dropdown aba EQUIPES
+//   E-H: MR-1 a MR-4 OD
+//   I  : OFERTA OLHO ESQUERDO
+//   J  : HOSPITAL OE
+//   K-N: MR-1 a MR-4 OE
+//   O  : EXPORTAR       ← qualquer valor → exporta
 
 const ABA_OFERTAS  = "OFERTAS";
 const ABA_RECUSAS  = "RECUSAS";
 const ABA_LISTAS   = "LISTAS";
-const LINHA_INI    = 3;   // primeira linha de dados
-const LINHA_FIM    = 14;  // última linha da seção de ofertas
-const COL_EXPORTAR = 14;  // coluna N = 14
+const ABA_EQUIPES  = "EQUIPES";
+const LINHA_INI    = 3;
+const LINHA_FIM    = 14;
+const COL_EQUIPE   = 4;   // D
+const COL_EXPORTAR = 15;  // O
 
 const MOTIVOS = [
   "Alteração laboratorial","Alteração morfológica","Alterações no tecido",
@@ -29,46 +42,60 @@ const MOTIVOS = [
   "Utilizado para valvas cardíacas","Utilizado parente/cônjuge",
 ];
 
-// ── Cria o menu ao abrir a planilha ─────────────────────────
+// ── Menu ─────────────────────────────────────────────────────
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu("⚕ OFERTAS")
     .addItem("📋 Configurar planilha (dropdowns + abas)", "configurarPlanilha")
     .addSeparator()
-    .addItem("🔴 Exportar recusas marcadas com X", "exportarRecusas")
+    .addItem("🔴 Exportar recusas (col O preenchida)", "exportarRecusas")
     .addToUi();
 }
 
 // ============================================================
-// CONFIGURAR — cria LISTAS, RECUSAS e adiciona dropdowns
+// CONFIGURAR
 // ============================================================
 function configurarPlanilha() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss  = SpreadsheetApp.getActiveSpreadsheet();
+  const qtd = LINHA_FIM - LINHA_INI + 1;
 
-  // 1. Aba LISTAS (oculta) com os motivos
+  // 1. Aba LISTAS com motivos de recusa
   let wsL = ss.getSheetByName(ABA_LISTAS);
   if (!wsL) wsL = ss.insertSheet(ABA_LISTAS);
   wsL.clearContents();
   MOTIVOS.forEach((m, i) => wsL.getRange(i + 1, 1).setValue(m));
   wsL.hideSheet();
 
-  // 2. Dropdowns nas colunas MR da aba OFERTAS
   const wsOf = ss.getSheetByName(ABA_OFERTAS);
   if (!wsOf) { SpreadsheetApp.getUi().alert("Aba 'OFERTAS' não encontrada!"); return; }
 
+  // 2. Dropdown EQUIPE — coluna D, lê da aba EQUIPES (dados a partir da linha 3)
+  const wsEq = ss.getSheetByName(ABA_EQUIPES);
+  if (wsEq) {
+    const ultimaEq = wsEq.getLastRow();
+    if (ultimaEq >= 3) {
+      const regraEq = SpreadsheetApp.newDataValidation()
+        .requireValueInRange(wsEq.getRange(3, 1, ultimaEq - 2, 1), true)
+        .setAllowInvalid(false)
+        .build();
+      wsOf.getRange(LINHA_INI, COL_EQUIPE, qtd, 1).setDataValidation(regraEq);
+    }
+  } else {
+    SpreadsheetApp.getUi().alert("Atenção: aba 'EQUIPES' não encontrada. Dropdown de equipes não configurado.");
+  }
+
+  // 3. Dropdowns MR — OD: E-H (5-8), OE: K-N (11-14)
   const regraMotivo = SpreadsheetApp.newDataValidation()
     .requireValueInRange(wsL.getRange(1, 1, MOTIVOS.length, 1), true)
     .setAllowInvalid(false)
     .build();
 
-  // OD: colunas D(4) a G(7)
-  wsOf.getRange(LINHA_INI, 4, LINHA_FIM - LINHA_INI + 1, 4).setDataValidation(regraMotivo);
-  // OE: colunas J(10) a M(13)
-  wsOf.getRange(LINHA_INI, 10, LINHA_FIM - LINHA_INI + 1, 4).setDataValidation(regraMotivo);
+  wsOf.getRange(LINHA_INI, 5,  qtd, 4).setDataValidation(regraMotivo); // E-H OD
+  wsOf.getRange(LINHA_INI, 11, qtd, 4).setDataValidation(regraMotivo); // K-N OE
 
-  // 3. Coluna N — cabeçalho + instrução
+  // 4. Coluna O — EXPORTAR
   wsOf.getRange(1, COL_EXPORTAR)
-      .setValue("→ Digite X para exportar a linha")
+      .setValue("→ Preencha para exportar")
       .setFontColor("#C00000").setFontStyle("italic")
       .setFontSize(8).setHorizontalAlignment("center");
 
@@ -77,28 +104,27 @@ function configurarPlanilha() {
       .setBackground("#C00000").setFontColor("#FFFFFF")
       .setFontWeight("bold").setHorizontalAlignment("center");
 
-  // Formatar células de dados N3:N14
-  wsOf.getRange(LINHA_INI, COL_EXPORTAR, LINHA_FIM - LINHA_INI + 1, 1)
+  wsOf.getRange(LINHA_INI, COL_EXPORTAR, qtd, 1)
       .setBackground("#FFCCCC").setFontColor("#C00000")
       .setFontWeight("bold").setFontSize(12).setHorizontalAlignment("center");
 
   wsOf.setColumnWidth(COL_EXPORTAR, 100);
 
-  // 4. Criar aba RECUSAS se não existir
+  // 5. Aba RECUSAS
   garantirAbaRecusas_(ss);
 
   SpreadsheetApp.getUi().alert(
     "✔ Configuração concluída!\n\n" +
-    "• Dropdowns MR nas colunas D-G e J-M (linhas 3-14)\n" +
-    "• Coluna N (EXPORTAR) configurada\n" +
+    "• Dropdown EQUIPE em D3:D14 (aba EQUIPES)\n" +
+    "• Dropdowns MR em E-H e K-N (linhas 3-14)\n" +
+    "• Coluna O (EXPORTAR) configurada\n" +
     "• Aba RECUSAS pronta\n\n" +
-    "Para exportar: digite X na coluna N da linha desejada\n" +
-    "e use o menu ⚕ OFERTAS → Exportar recusas."
+    "Fluxo: selecione a EQUIPE → preencha MRs → preencha col O → exporte."
   );
 }
 
 // ============================================================
-// EXPORTAR — move linhas marcadas com X para RECUSAS
+// EXPORTAR
 // ============================================================
 function exportarRecusas() {
   const ss   = SpreadsheetApp.getActiveSpreadsheet();
@@ -109,52 +135,67 @@ function exportarRecusas() {
   let proximaRec = Math.max(wsRec.getLastRow() + 1, 3);
   const agora    = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd/MM/yyyy HH:mm");
   let exportadas = 0;
+  const semEquipe = [];
 
   for (let linha = LINHA_INI; linha <= LINHA_FIM; linha++) {
     const marcador = String(wsOf.getRange(linha, COL_EXPORTAR).getValue()).trim();
     if (marcador === "") continue;
 
-    // Copiar colunas A:M (1-13) para RECUSAS
-    const dados = wsOf.getRange(linha, 1, 1, 13).getValues();
-    wsRec.getRange(proximaRec, 1, 1, 13).setValues(dados);
-    wsRec.getRange(proximaRec, 14).setValue(agora);
-    wsRec.getRange(proximaRec, 1, 1, 14).setBackground("#FFCCCC");
+    // Validar equipe obrigatória
+    const equipe = String(wsOf.getRange(linha, COL_EQUIPE).getValue()).trim();
+    if (equipe === "") {
+      semEquipe.push(linha);
+      continue;
+    }
 
-    // Apagar MRs (mantém A-C: RGCT, nome, hospital)
-    wsOf.getRange(linha, 4, 1, 4).clearContent();   // D-G OD
-    wsOf.getRange(linha, 10, 1, 4).clearContent();  // J-M OE
-    wsOf.getRange(linha, COL_EXPORTAR).clearContent(); // X
+    // Copiar colunas A-N (1-14) para RECUSAS
+    const dados = wsOf.getRange(linha, 1, 1, 14).getValues();
+    wsRec.getRange(proximaRec, 1, 1, 14).setValues(dados);
+    // Data na coluna O (15)
+    wsRec.getRange(proximaRec, 15).setValue(agora);
+    wsRec.getRange(proximaRec, 1, 1, 15).setBackground("#FFCCCC");
+
+    // Apagar MRs e marcador — mantém A-D (RGCT, ofertas, hospital, equipe)
+    wsOf.getRange(linha, 5,  1, 4).clearContent(); // E-H MR OD
+    wsOf.getRange(linha, 11, 1, 4).clearContent(); // K-N MR OE
+    wsOf.getRange(linha, COL_EXPORTAR).clearContent();
 
     proximaRec++;
     exportadas++;
   }
 
-  if (exportadas === 0) {
-    SpreadsheetApp.getUi().alert(
-      "Nenhuma linha marcada.\n\nPreencha a coluna N (linhas 3 a 14) e tente novamente."
-    );
+  let msg = "";
+  if (semEquipe.length > 0) {
+    msg += `⚠ ${semEquipe.length} linha(s) ignorada(s) por falta de EQUIPE: linhas ${semEquipe.join(", ")}.\n\n`;
+  }
+  if (exportadas === 0 && semEquipe.length === 0) {
+    SpreadsheetApp.getUi().alert("Nenhuma linha marcada na coluna O (linhas 3 a 14).");
+  } else if (exportadas === 0) {
+    SpreadsheetApp.getUi().alert(msg + "Nenhuma linha exportada. Preencha a coluna D (EQUIPE) antes de exportar.");
   } else {
-    SpreadsheetApp.getUi().alert(
-      `✔ ${exportadas} recusa(s) exportada(s) para RECUSAS.\nMRs apagados da OFERTAS.`
-    );
+    SpreadsheetApp.getUi().alert(msg + `✔ ${exportadas} recusa(s) exportada(s) para RECUSAS.\nMRs apagados da OFERTAS.`);
     ss.setActiveSheet(wsRec);
   }
 }
 
-// ── Helper: garante aba RECUSAS com cabeçalho ───────────────
+// ── Helper: aba RECUSAS com cabeçalho ───────────────────────
 function garantirAbaRecusas_(ss) {
   let wsRec = ss.getSheetByName(ABA_RECUSAS);
   if (!wsRec) { wsRec = ss.insertSheet(ABA_RECUSAS); wsRec.setTabColor("#C00000"); }
 
   if (!wsRec.getRange("A1").getValue()) {
-    wsRec.getRange("A1:N1").merge()
+    wsRec.getRange("A1:O1").merge()
          .setValue("RECUSAS EXPORTADAS")
          .setBackground("#C00000").setFontColor("#FFFFFF")
          .setFontWeight("bold").setFontSize(13).setHorizontalAlignment("center");
     wsRec.setRowHeight(1, 30);
 
-    ["RGCT","OFERTA OD","HOSPITAL OD","MR-1 OD","MR-2 OD","MR-3 OD","MR-4 OD",
-     "OFERTA OE","HOSPITAL OE","MR-1 OE","MR-2 OE","MR-3 OE","MR-4 OE","—","DATA EXPORTAÇÃO"]
+    // 15 colunas: A-N dados + O data
+    ["RGCT","OFERTA OD","HOSPITAL OD","EQUIPE",
+     "MR-1 OD","MR-2 OD","MR-3 OD","MR-4 OD",
+     "OFERTA OE","HOSPITAL OE",
+     "MR-1 OE","MR-2 OE","MR-3 OE","MR-4 OE",
+     "DATA EXPORTAÇÃO"]
     .forEach((nome, i) => {
       wsRec.getRange(2, i + 1)
            .setValue(nome)
