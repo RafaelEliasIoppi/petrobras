@@ -1,13 +1,11 @@
 const API_BASE = '/api/dados';
 
-const { ref } = Vue;
-
 const Armazenamento = {
   _usaServer: undefined, // undefined: não verificado, false: offline, true: online
   _initPromise: null,
   _cache: {},
   _debounceTimers: {},
-  status: ref('idle'), // 'idle', 'saving', 'saved', 'error'
+  _status: 'idle', // 'idle', 'saving', 'saved', 'error'
 
   _init() {
     if (!this._initPromise) {
@@ -39,7 +37,7 @@ const Armazenamento = {
   },
 
   _putToServer(nome, dados, debounceMs = 1000) {
-    this.status.value = 'saving';
+    this._status = 'saving';
 
     return new Promise((resolve) => {
       // Agrupa múltiplas chamadas para o mesmo endpoint
@@ -56,14 +54,14 @@ const Armazenamento = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dados)
           });
-          this.status.value = response.ok ? 'saved' : 'error';
+          this._status = response.ok ? 'saved' : 'error';
           resolve({ ok: response.ok });
         } catch (err) {
           console.error(`Falha ao salvar '${nome}' no servidor:`, err);
-          this.status.value = 'error';
+          this._status = 'error';
           resolve({ ok: false, error: err });
         } finally {
-          setTimeout(() => { if (this.status.value !== 'saving') this.status.value = 'idle'; }, 2000);
+          setTimeout(() => { if (this._status !== 'saving') this._status = 'idle'; }, 2000);
         }
       }, debounceMs);
 
@@ -228,6 +226,31 @@ const Armazenamento = {
     if (idx >= 0) lista.splice(idx, 1);
     this._salvarLocal('revisoes', lista);
     return this._deleteFromServer('revisoes', id);
+  },
+
+  // --- Flashcards ---
+  getFlashcards() {
+    return this._getData('flashcards', [], 'array');
+  },
+
+  async salvarFlashcard(card) {
+    const lista = await this.getFlashcards();
+    const idx = lista.findIndex(f => f.id === card.id);
+    if (idx >= 0) {
+      lista[idx] = card;
+    } else {
+      lista.push(card);
+    }
+    this._salvarLocal('flashcards', lista);
+    return this._putToServer('flashcards', lista);
+  },
+
+  async removerFlashcard(id) {
+    const lista = await this.getFlashcards();
+    const idx = lista.findIndex(f => f.id === id);
+    if (idx > -1) lista.splice(idx, 1);
+    this._salvarLocal('flashcards', lista);
+    return this._deleteFromServer('flashcards', id);
   },
 
   // --- Ciclo (posição atual) ---

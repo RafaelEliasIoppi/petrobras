@@ -416,6 +416,162 @@ function useRevisoes(revisaoIntervalos) {
   return { revisoes, revisoesPendentes, revisoesHoje, agendarRevisao, concluirRevisao, removerRevisao };
 }
 
+function useFlashcards() {
+  const flashcards = ref([]);
+  const formFlashcard = ref({ materia: '', frente: '', verso: '' });
+  const editandoFlashcard = ref(null);
+  const carregandoFlashcards = ref(false);
+  
+  // --- Estado do Modo de Revisão ---
+  const modoRevisao = ref(false);
+  const configurandoRevisao = ref(false);
+  const deckRevisao = ref([]);
+  const cardAtualIndex = ref(0);
+  const opcoesRevisao = ref({ materias: [], numCards: 10, aleatorio: true });
+
+  // Configuração do Sistema Leitner
+  const LEITNER_BOXES = {
+    1: 1,  // Revisar todo dia
+    2: 3,  // A cada 3 dias
+    3: 7,  // A cada 7 dias
+    4: 14, // A cada 14 dias
+    5: 30  // A cada 30 dias
+  };
+  const cardAtual = computed(() => deckRevisao.value[cardAtualIndex.value] || null);
+  const progressoRevisao = computed(() => deckRevisao.value.length > 0 ? Math.round(((cardAtualIndex.value + 1) / deckRevisao.value.length) * 100) : 0);
+
+
+  const flashcardsAgrupados = computed(() => {
+    const grupos = {};
+    const materias = ['Português', 'Matemática', 'Química'];
+    materias.forEach(m => grupos[m] = []);
+    flashcards.value.forEach(f => {
+      if (grupos[f.materia]) grupos[f.materia].push(f);
+    });
+    return grupos;
+  });
+
+  async function carregarFlashcards() {
+    if (flashcards.value.length > 0) return;
+    carregandoFlashcards.value = true;
+    flashcards.value = await Armazenamento.getFlashcards();
+    carregandoFlashcards.value = false;
+  }
+
+  function novoFlashcard() {
+    editandoFlashcard.value = { 
+      id: Date.now(), 
+      ...formFlashcard.value,
+      box: 1, // Novos cards começam na caixa 1
+      lastReviewed: null 
+    };
+  }
+
+  async function salvarFlashcard() {
+    if (!editandoFlashcard.value || !editandoFlashcard.value.materia) return;
+    const cardSalvo = { box: 1, lastReviewed: null, ...editandoFlashcard.value };
+
+    const idx = flashcards.value.findIndex(f => f.id === cardSalvo.id);
+    if (idx >= 0) flashcards.value.splice(idx, 1, cardSalvo);
+    else flashcards.value.push(cardSalvo);
+
+    await Armazenamento.salvarFlashcard(cardSalvo);
+    editandoFlashcard.value = null;
+    formFlashcard.value = { materia: '', frente: '', verso: '' };
+  }
+
+  function editarFlashcard(card) {
+    editandoFlashcard.value = { ...card };
+  }
+
+  async function removerFlashcard(id) {
+    const idx = flashcards.value.findIndex(f => f.id === id);
+    if (idx > -1) flashcards.value.splice(idx, 1);
+    await Armazenamento.removerFlashcard(id);
+  }
+
+  function cancelarFlashcard() { 
+    editandoFlashcard.value = null; 
+  }
+
+  // --- Métodos do Modo de Revisão ---
+  function abrirConfiguracaoRevisao() {
+    configurandoRevisao.value = true;
+  }
+
+  function iniciarRevisao() {
+    configurandoRevisao.value = false;
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    // 1. Seleciona os cards "vencidos" para revisão
+    let dueCards = flashcards.value.filter(card => {
+      if (!card.lastReviewed) return true; // Cards nunca revisados estão sempre vencidos
+      const lastReviewed = new Date(card.lastReviewed);
+      const interval = LEITNER_BOXES[card.box || 1] || 1;
+      const dueDate = new Date(lastReviewed);
+      dueDate.setDate(dueDate.getDate() + interval);
+      return hoje >= dueDate;
+    });
+
+    // 2. Filtra por matéria, se o usuário selecionou alguma
+    if (opcoesRevisao.value.materias.length > 0) {
+      dueCards = dueCards.filter(card => opcoesRevisao.value.materias.includes(card.materia));
+    }
+
+    // 3. Embaralha o deck
+    if (opcoesRevisao.value.aleatorio) {
+      for (let i = dueCards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [dueCards[i], dueCards[j]] = [dueCards[j], dueCards[i]];
+      }
+    }
+
+    // 4. Limita o número de cards e prepara para a revisão
+    deckRevisao.value = dueCards.slice(0, opcoesRevisao.value.numCards).map(c => ({...c, virado: false}));
+    cardAtualIndex.value = 0;
+    modoRevisao.value = true;
+  }
+
+  function proximoCard() {
+    if (cardAtualIndex.value < deckRevisao.value.length - 1) {
+      cardAtualIndex.value++;
+    } else {
+      finalizarRevisao(); // Termina a revisão ao chegar no último card
+    }
+  }
+
+  async function marcarResultado(acertou) {
+    const card = cardAtual.value;
+    if (!card) return;
+
+    if (acertou) {
+      card.box = Math.min((card.box || 1) + 1, 5); // Avança a caixa, máx 5
+    } else {
+      card.box = 1; // Errou, volta para a caixa 1
+    }
+    card.lastReviewed = new Date().toISOString().slice(0, 10);
+
+    // Salva a alteração no card original
+    const originalCard = flashcards.value.find(f => f.id === card.id);
+    if (originalCard) {
+      Object.assign(originalCard, { box: card.box, lastReviewed: card.lastReviewed });
+      await Armazenamento.salvarFlashcard(originalCard);
+    }
+    proximoCard();
+  }
+
+  function finalizarRevisao() {
+    modoRevisao.value = false;
+  }
+
+  function cancelarConfiguracaoRevisao() {
+    configurandoRevisao.value = false;
+  }
+
+  return { flashcards, formFlashcard, editandoFlashcard, carregandoFlashcards, flashcardsAgrupados, carregarFlashcards, novoFlashcard, salvarFlashcard, editarFlashcard, removerFlashcard, cancelarFlashcard, modoRevisao, configurandoRevisao, deckRevisao, cardAtual, progressoRevisao, opcoesRevisao, abrirConfiguracaoRevisao, iniciarRevisao, proximoCard, marcarResultado, finalizarRevisao, cancelarConfiguracaoRevisao };
+}
+
 // ===================================================================
 //  APLICAÇÃO VUE - O Orquestrador
 // ===================================================================
@@ -429,8 +585,8 @@ const app = createApp({
     const carregando = ref(true);
     const tema = ref('light');
 
-    // --- Estado Global da Aplicação ---
-    const saveStatus = Armazenamento.status;
+    // --- Estado Global da Aplicação (agora controlado aqui) ---
+    const saveStatus = ref('idle');
 
     // --- Constantes e Dados Estáticos ---
     const semanasPlano = SEMANAS_PLANO;
@@ -470,6 +626,9 @@ const app = createApp({
     // --- Usando o Composable para a feature de Revisões ---
     const { revisoes, revisoesPendentes, revisoesHoje, agendarRevisao, concluirRevisao, removerRevisao } = useRevisoes(REVISAO_INTERVALOS);
 
+    // --- Usando o Composable para a feature de Flashcards ---
+    const { flashcards, formFlashcard, editandoFlashcard, carregandoFlashcards, flashcardsAgrupados, carregarFlashcards, novoFlashcard, salvarFlashcard, editarFlashcard, removerFlashcard, cancelarFlashcard, modoRevisao, configurandoRevisao, deckRevisao, cardAtual, progressoRevisao, opcoesRevisao, abrirConfiguracaoRevisao, iniciarRevisao, proximoCard, marcarResultado, finalizarRevisao, cancelarConfiguracaoRevisao } = useFlashcards();
+
 
     const horasSemanaAtual = computed(() => horasSemana(semanaAtual.value));
     const metaSemanaCss = computed(() => {
@@ -508,6 +667,16 @@ const app = createApp({
       if (novaView === 'erros') {
         carregarErros();
       }
+      if (novaView === 'flashcards') {
+        carregarFlashcards();
+      }
+    });
+
+    // Observador para sincronizar o status de salvamento
+    // Usa um timer para verificar o status não reativo do Armazenamento
+    setInterval(() => {
+      const statusAtual = Armazenamento._status;
+      if (saveStatus.value !== statusAtual) saveStatus.value = statusAtual;
     });
 
     const tituloView = computed(() => ({
@@ -517,6 +686,7 @@ const app = createApp({
       horas: 'Quadro de Horas',
       simulados: 'Simulados',
       erros: 'Caderno de Erros',
+      flashcards: 'Flashcards',
       diario: 'Diário de Estudos',
       plano: 'Plano de Estudos'
     })[view.value]);
@@ -528,6 +698,7 @@ const app = createApp({
       horas: 'Registre suas horas de estudo',
       simulados: 'Acompanhe seu desempenho nos simulados',
       erros: 'Caderno de Erros — cada erro é um ponto garantido',
+      flashcards: 'Crie e revise seus flashcards',
       diario: 'Checklist diário do concurseiro aprovado',
       plano: 'Consulte o cronograma e conteúdos programáticos'
     })[view.value]);
@@ -622,6 +793,11 @@ const app = createApp({
       // Expondo tudo do Composable de Revisões
       revisoes, revisoesPendentes, revisoesHoje,
       agendarRevisao, concluirRevisao, removerRevisao,
+      // Expondo tudo do Composable de Flashcards
+      flashcards, formFlashcard, editandoFlashcard, carregandoFlashcards, flashcardsAgrupados,
+      novoFlashcard, salvarFlashcard, editarFlashcard, removerFlashcard, cancelarFlashcard,
+      modoRevisao, configurandoRevisao, deckRevisao, cardAtual, progressoRevisao, opcoesRevisao, 
+      abrirConfiguracaoRevisao, iniciarRevisao, proximoCard, marcarResultado, finalizarRevisao, cancelarConfiguracaoRevisao,
       // Expondo tudo do Composable de Ciclo de Estudos
       ciclo, materiaAtual, cicloCompleto, cicloExpandido,
       avancarCiclo, reiniciarCiclo,
