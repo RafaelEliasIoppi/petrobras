@@ -20,31 +20,31 @@
         <span>Técnico em Química • Cesgranrio</span>
       </div>
       <nav class="sidebar-nav">
-        <button class="nav-item" :class="{ ativa: view === 'dashboard' }" @click="irPara('dashboard')">
+        <a href="#dashboard" class="nav-item" :class="{ ativa: view === 'dashboard' }" @click.prevent="irPara('dashboard')">
           <span class="icone">📊</span> Dashboard
-        </button>
-        <button class="nav-item" :class="{ ativa: view === 'checklist' }" @click="irPara('checklist')">
+        </a>
+        <a href="#checklist" class="nav-item" :class="{ ativa: view === 'checklist' }" @click.prevent="irPara('checklist')">
           <span class="icone">✅</span> Conteúdos
-        </button>
-        <button class="nav-item" :class="{ ativa: view === 'ciclo' }" @click="irPara('ciclo')">
+        </a>
+        <a href="#ciclo" class="nav-item" :class="{ ativa: view === 'ciclo' }" @click.prevent="irPara('ciclo')">
           <span class="icone">🔄</span> Ciclo
-        </button>
-        <button class="nav-item" :class="{ ativa: view === 'horas' }" @click="irPara('horas')">
+        </a>
+        <a href="#horas" class="nav-item" :class="{ ativa: view === 'horas' }" @click.prevent="irPara('horas')">
           <span class="icone">⏱</span> Horas
-        </button>
-        <button class="nav-item" :class="{ ativa: view === 'simulados' }" @click="irPara('simulados')">
+        </a>
+        <a href="#simulados" class="nav-item" :class="{ ativa: view === 'simulados' }" @click.prevent="irPara('simulados')">
           <span class="icone">📋</span> Simulados
-        </button>
-        <button class="nav-item" :class="{ ativa: view === 'erros' }" @click="irPara('erros')">
+        </a>
+        <a href="#erros" class="nav-item" :class="{ ativa: view === 'erros' }" @click.prevent="irPara('erros')">
           <span class="icone">📕</span> Erros
-        </button>
-        <button class="nav-item" :class="{ ativa: view === 'diario' }" @click="irPara('diario')">
+        </a>
+        <a href="#diario" class="nav-item" :class="{ ativa: view === 'diario' }" @click.prevent="irPara('diario')">
           <span class="icone">📌</span> Diário
-        </button>
+        </a>
         <div style="border-top:1px solid rgba(255,255,255,0.08);margin:8px 16px;"></div>
-        <button class="nav-item" :class="{ ativa: view === 'plano' }" @click="irPara('plano')">
+        <a href="#plano" class="nav-item" :class="{ ativa: view === 'plano' }" @click.prevent="irPara('plano')">
           <span class="icone">📖</span> Plano de Estudos
-        </button>
+        </a>
       </nav>
       <div style="padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.08);">
         <button class="nav-item" @click="alternarTema" style="font-size:13px;">
@@ -65,8 +65,8 @@
 
       <transition name="fade" mode="out-in">
         <div :key="view">
-          <!-- DASHBOARD -->
-        <div v-if="view === 'dashboard'" key="dashboard">
+          <!-- DASHBOARD --> 
+        <template v-if="view === 'dashboard'">
           <div class="grade-cartoes">
             <div class="cartao-stat verde">
               <div class="valor">{{ progressoGeral }}%</div>
@@ -127,10 +127,10 @@
               Banca: <strong>Cesgranrio</strong> · Última prova referência: 2018
             </div>
           </div>
-        </div>
+        </template>
 
         <!-- CHECKLIST -->
-        <div v-if="view === 'checklist'" key="checklist">
+        <template v-if="view === 'checklist'">
           <div class="grade-cartoes">
             <div v-for="m in conteudos" :key="m.id" class="cartao-stat" :style="{ borderTopColor: m.cor }">
               <div class="valor" :style="{ color: m.cor }">{{ progressoMateria(m) }}%</div>
@@ -184,10 +184,10 @@
               </div>
             </div>
           </div>
-        </div>
+        </template>
 
         <!-- HORAS -->
-        <div v-if="view === 'horas'" key="horas">
+        <template v-if="view === 'horas'">
           <div class="grade-cartoes" style="margin-bottom:20px;">
             <div class="cartao-stat verde">
               <div class="valor">{{ horasSemanaAtual }}</div>
@@ -286,10 +286,10 @@
               </tfoot>
             </table>
           </div>
-        </div>
+        </template>
 
         <!-- PLANO -->
-        <div v-if="view === 'plano'" key="plano">
+        <template v-if="view === 'plano'">
           <div class="card" style="margin-bottom:16px;">
             <div class="card-titulo" style="margin-bottom:0;">
               <select v-model="planoSelecionado" @change="carregarPlano"
@@ -307,10 +307,10 @@
           <div class="card" v-if="!carregandoPlano && !planoHtml" style="text-align:center;padding:40px;color:var(--texto-sec);">
             Selecione um documento acima para visualizar.
           </div>
-        </div>
+        </template>
 
         <!-- SIMULADOS -->
-        <div v-if="view === 'simulados'" key="simulados">
+        <template v-if="view === 'simulados'">
           <div class="grade-cartoes">
             <div class="cartao-stat" v-for="(s, i) in simuladosOrdenados" :key="s.semana"
               :class="s.total/60 >= 0.7 ? 'verde' : s.total/60 >= 0.5 ? 'laranja' : 'vermelho'">
@@ -387,10 +387,10 @@
               </tbody>
             </table>
           </div>
-        </div>
+        </template>
 
         <!-- CICLO DE ESTUDOS -->
-        <div v-if="view === 'ciclo'" key="ciclo">
+        <template v-if="view === 'ciclo'">
           <div class="grade-cartoes">
             <div class="cartao-stat" :style="{ borderTopColor: '#8b5cf6' }">
               <div class="valor" style="font-size:24px;color:#8b5cf6;">{{ materiaAtual.materia }}</div>
@@ -464,10 +464,10 @@
               💡 <strong>Tática dos 60%:</strong> Na prova, resolva primeiro as questões mais rápidas e fáceis de cada matéria. Deixe as longas e complexas para o final.
             </div>
           </div>
-        </div>
+        </template>
 
         <!-- CADERNO DE ERROS -->
-        <div v-if="view === 'erros'" key="erros">
+        <template v-if="view === 'erros'">
           <div class="grade-cartoes">
             <div class="cartao-stat vermelho">
               <div class="valor">{{ totalErros }}</div>
@@ -563,10 +563,10 @@
               </div>
             </div>
           </div>
-        </div>
+        </template>
 
         <!-- DIÁRIO (DAILY CHECKLIST) -->
-        <div v-if="view === 'diario'" key="diario">
+        <template v-if="view === 'diario'">
           <div class="grade-cartoes">
             <div class="cartao-stat" :class="diarioProgresso >= 100 ? 'verde' : diarioProgresso >= 50 ? 'laranja' : 'vermelho'">
               <div class="valor">{{ diarioProgresso }}%</div>
@@ -610,8 +610,8 @@
               </div>
             </div>
           </div>
-          </div>
-        </div>
+          </template>
+        </div> 
       </transition>
     </main>
 
