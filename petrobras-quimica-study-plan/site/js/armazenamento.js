@@ -1,99 +1,126 @@
 const API_BASE = '/api/dados';
 
 const Armazenamento = {
-  _usaServer: false,
-  _iniciada: false,
-  _fila: [],
+  _usaServer: undefined, // undefined: não verificado, false: offline, true: online
+  _initPromise: null,
+  _cache: {},
+  _debounceTimers: {},
 
-  async _init() {
-    try {
-      const r = await fetch(`${API_BASE}/config.json`);
-      this._usaServer = r.ok;
-    } catch {
-      this._usaServer = false;
+  _init() {
+    if (!this._initPromise) {
+      this._initPromise = (async () => {
+        try {
+          // Um endpoint leve para verificar a conectividade
+          const r = await fetch('/api/arquivos');
+          this._usaServer = r.ok;
+          console.log(`Modo de armazenamento: ${this._usaServer ? 'Servidor' : 'Local'}`);
+        } catch {
+          this._usaServer = false;
+          console.log('Modo de armazenamento: Local (servidor indisponível)');
+        }
+      })();
     }
-    this._iniciada = true;
+    return this._initPromise;
   },
 
-  async _aguardarInit() {
-    if (!this._iniciada) {
-      await this._init();
-    }
-  },
-
-  async _get(nome) {
-    await this._aguardarInit();
+  async _getFromServer(nome) {
+    await this._init();
     if (!this._usaServer) return null;
     try {
       const r = await fetch(`${API_BASE}/${nome}.json`);
       return r.ok ? await r.json() : null;
-    } catch { return null; }
+    } catch (err) {
+      console.error(`Falha ao buscar '${nome}' do servidor:`, err);
+      return null;
+    }
   },
 
-  async _put(nome, dados) {
-    await this._aguardarInit();
-    if (!this._usaServer) return;
-    try {
-      await fetch(`${API_BASE}/${nome}.json`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dados)
-      });
-    } catch { /* fallback */ }
+  _putToServer(nome, dados) {
+    // Agrupa múltiplas chamadas para o mesmo endpoint
+    if (this._debounceTimers[nome]) {
+      clearTimeout(this._debounceTimers[nome]);
+    }
+    this._debounceTimers[nome] = setTimeout(async () => {
+      await this._init();
+      if (!this._usaServer) return;
+      try {
+        await fetch(`${API_BASE}/${nome}.json`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(dados)
+        });
+      } catch (err) {
+        console.error(`Falha ao salvar '${nome}' no servidor:`, err);
+      }
+    }, 1000); // Aguarda 1 segundo de inatividade antes de salvar
   },
 
-  async _delete(nome, chave) {
-    await this._aguardarInit();
+  async _deleteFromServer(nome, chave) {
+    await this._init();
     if (!this._usaServer) return;
     try {
       await fetch(`${API_BASE}/${nome}.json/${encodeURIComponent(chave)}`, { method: 'DELETE' });
-    } catch { /* fallback */ }
+    } catch (err) {
+      console.error(`Falha ao deletar chave '${chave}' de '${nome}' no servidor:`, err);
+    }
   },
 
   _mergeObj(server, local) {
-    if (!server && !local) return {};
-    if (!server) return local || {};
-    if (!local) return server;
-    return { ...local, ...server };
+    // A estratégia de merge pode ser aprimorada, mas para este caso,
+    // o dado local (mais recente) tem preferência sobre o do servidor.
+    return { ...server, ...local };
   },
 
   _mergeArray(server, local) {
-    const arrServer = Array.isArray(server) ? server : null;
-    const arrLocal = Array.isArray(local) ? local : null;
-    if (!arrServer && !arrLocal) return [];
-    if (!arrServer) return arrLocal;
-    if (!arrLocal) return arrServer;
+    if (!Array.isArray(server)) server = [];
+    if (!Array.isArray(local)) local = [];
+    
     const mapa = new Map();
-    [...arrLocal, ...arrServer].forEach(item => mapa.set(item.semana, item));
+    // A chave de identificação pode variar (semana, id, etc.)
+    const getKey = (item) => item.id || item.semana;
+
+    // Dados do servidor são a base, dados locais sobrescrevem
+    [...server, ...local].forEach(item => {
+      const key = getKey(item);
+      if (key !== undefined) {
+        mapa.set(key, item);
+      }
+    });
     return [...mapa.values()];
   },
 
+  // --- Métodos Genéricos de Acesso a Dados ---
+  async _getData(nome, padrao, tipoMerge = 'obj') {
+    if (this._cache[nome]) return this._cache[nome];
+
+    const serverData = await this._getFromServer(nome);
+    const localData = this._carregarLocal(nome, padrao);
+
+    const mergedData = tipoMerge === 'array'
+      ? this._mergeArray(serverData, localData)
+      : this._mergeObj(serverData, localData);
+
+    this._cache[nome] = mergedData;
+    this._salvarLocal(nome, mergedData); // Sincroniza o local com o merge
+    this._putToServer(nome, mergedData); // Envia o merge para o servidor
+    return this._cache[nome];
+  },
+
   // --- CheckList ---
-  async getChecklist() {
-    const server = await this._get('checklist');
-    const local = this._carregarLocal('checklist', {});
-    const merged = this._mergeObj(server, local);
-    this._salvarLocal('checklist', merged);
-    if (this._usaServer) this._put('checklist', merged);
-    return merged;
+  getChecklist() {
+    return this._getData('checklist', {});
   },
 
   async salvarChecklist(idItem, valor) {
     const lista = await this.getChecklist();
-    if (lista[idItem] === valor) return;
     lista[idItem] = valor;
     this._salvarLocal('checklist', lista);
-    if (this._usaServer) await this._put('checklist', lista);
+    this._putToServer('checklist', lista);
   },
 
   // --- Horas ---
-  async getHoras() {
-    const server = await this._get('horas');
-    const local = this._carregarLocal('horas', {});
-    const merged = this._mergeObj(server, local);
-    this._salvarLocal('horas', merged);
-    if (this._usaServer) this._put('horas', merged);
-    return merged;
+  getHoras() {
+    return this._getData('horas', {});
   },
 
   async salvarHora(semana, dia, materia, valor) {
@@ -102,17 +129,12 @@ const Armazenamento = {
     if (!horas[semana][dia]) horas[semana][dia] = {};
     horas[semana][dia][materia] = Number(valor) || 0;
     this._salvarLocal('horas', horas);
-    if (this._usaServer) await this._put('horas', horas);
+    this._putToServer('horas', horas);
   },
 
   // --- Simulados ---
-  async getSimulados() {
-    const server = await this._get('simulados');
-    const local = this._carregarLocal('simulados', []);
-    const merged = this._mergeArray(server, local);
-    this._salvarLocal('simulados', merged);
-    if (this._usaServer) this._put('simulados', merged);
-    return merged;
+  getSimulados() {
+    return this._getData('simulados', [], 'array');
   },
 
   async salvarSimulado(simulado) {
@@ -121,7 +143,7 @@ const Armazenamento = {
     if (idx >= 0) lista[idx] = simulado;
     else lista.push(simulado);
     this._salvarLocal('simulados', lista);
-    if (this._usaServer) await this._put('simulados', lista);
+    this._putToServer('simulados', lista);
   },
 
   async removerSimulado(semana) {
@@ -129,17 +151,12 @@ const Armazenamento = {
     const idx = lista.findIndex(s => s.semana === semana);
     if (idx >= 0) lista.splice(idx, 1);
     this._salvarLocal('simulados', lista);
-    if (this._usaServer) await this._put('simulados', lista);
+    this._putToServer('simulados', lista);
   },
 
   // --- Erros (Caderno de Erros) ---
-  async getErros() {
-    const server = await this._get('erros');
-    const local = this._carregarLocal('erros', []);
-    const merged = this._mergeArray(server, local);
-    this._salvarLocal('erros', merged);
-    if (this._usaServer) this._put('erros', merged);
-    return merged;
+  getErros() {
+    return this._getData('erros', [], 'array');
   },
 
   async salvarErro(erro) {
@@ -148,7 +165,7 @@ const Armazenamento = {
     if (idx >= 0) lista[idx] = erro;
     else lista.push(erro);
     this._salvarLocal('erros', lista);
-    if (this._usaServer) await this._put('erros', lista);
+    this._putToServer('erros', lista);
   },
 
   async removerErro(id) {
@@ -156,34 +173,24 @@ const Armazenamento = {
     const idx = lista.findIndex(e => e.id === id);
     if (idx >= 0) lista.splice(idx, 1);
     this._salvarLocal('erros', lista);
-    if (this._usaServer) await this._put('erros', lista);
+    this._putToServer('erros', lista);
   },
 
   // --- Diário (Daily Checklist) ---
-  async getDiario() {
-    const server = await this._get('diario');
-    const local = this._carregarLocal('diario', {});
-    const merged = this._mergeObj(server, local);
-    this._salvarLocal('diario', merged);
-    if (this._usaServer) this._put('diario', merged);
-    return merged;
+  getDiario() {
+    return this._getData('diario', {});
   },
 
   async salvarDiario(data, items) {
     const diario = await this.getDiario();
     diario[data] = items;
     this._salvarLocal('diario', diario);
-    if (this._usaServer) await this._put('diario', diario);
+    this._putToServer('diario', diario);
   },
 
   // --- Revisões ---
-  async getRevisoes() {
-    const server = await this._get('revisoes');
-    const local = this._carregarLocal('revisoes', []);
-    const merged = this._mergeArray(server, local);
-    this._salvarLocal('revisoes', merged);
-    if (this._usaServer) this._put('revisoes', merged);
-    return merged;
+  getRevisoes() {
+    return this._getData('revisoes', [], 'array');
   },
 
   async salvarRevisao(rev) {
@@ -192,7 +199,7 @@ const Armazenamento = {
     if (idx >= 0) lista[idx] = rev;
     else lista.push(rev);
     this._salvarLocal('revisoes', lista);
-    if (this._usaServer) await this._put('revisoes', lista);
+    this._putToServer('revisoes', lista);
   },
 
   async removerRevisao(id) {
@@ -200,27 +207,22 @@ const Armazenamento = {
     const idx = lista.findIndex(r => r.id === id);
     if (idx >= 0) lista.splice(idx, 1);
     this._salvarLocal('revisoes', lista);
-    if (this._usaServer) await this._put('revisoes', lista);
+    this._putToServer('revisoes', lista);
   },
 
   // --- Ciclo (posição atual) ---
-  async getCiclo() {
-    const server = await this._get('ciclo');
-    const local = this._carregarLocal('ciclo', { posicao: 0, concluido: {} });
-    const merged = this._mergeObj(server, local);
-    this._salvarLocal('ciclo', merged);
-    if (this._usaServer) this._put('ciclo', merged);
-    return merged;
+  getCiclo() {
+    return this._getData('ciclo', { posicao: 0, concluido: {} });
   },
 
   async salvarCiclo(ciclo) {
     this._salvarLocal('ciclo', ciclo);
-    if (this._usaServer) await this._put('ciclo', ciclo);
+    this._putToServer('ciclo', ciclo);
   },
 
   // --- Config ---
   async getConfig() {
-    const server = await this._get('config');
+    const server = await this._getFromServer('config');
     const local = this._carregarLocal('config', { tema: 'light' });
     const merged = server || local;
     this._salvarLocal('config', merged);
@@ -230,7 +232,7 @@ const Armazenamento = {
 
   async salvarConfig(config) {
     this._salvarLocal('config', config);
-    if (this._usaServer) await this._put('config', config);
+    this._putToServer('config', config);
   },
 
   // --- Fallback localStorage ---

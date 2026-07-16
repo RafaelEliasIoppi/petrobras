@@ -1,10 +1,13 @@
-const http = require('http');
+const express = require('express');
 const fs = require('fs');
+const fsPromises = fs.promises;
 const path = require('path');
 
+const app = express();
 const PORT = process.env.PORT || 3000;
 const SITE_DIR = path.join(__dirname, 'site');
 const DADOS_DIR = path.join(__dirname, 'dados');
+const PLANOS_DIR = __dirname; // Planos .md estão na raiz
 
 if (!fs.existsSync(DADOS_DIR)) {
   fs.mkdirSync(DADOS_DIR, { recursive: true });
@@ -12,168 +15,149 @@ if (!fs.existsSync(DADOS_DIR)) {
 
 function sendJSON(res, status, data) {
   const json = JSON.stringify(data, null, 2);
-  res.writeHead(status, {
-    'Content-Type': 'application/json; charset=utf-8',
-    'Access-Control-Allow-Origin': '*'
-  });
-  res.end(json);
+  res.status(status)
+     .header('Content-Type', 'application/json; charset=utf-8')
+     .header('Access-Control-Allow-Origin', '*')
+     .send(json);
 }
 
-function sendFile(res, filePath) {
-  const ext = path.extname(filePath).toLowerCase();
-  const mime = {
-    '.html': 'text/html; charset=utf-8',
-    '.css': 'text/css; charset=utf-8',
-    '.js': 'application/javascript; charset=utf-8',
-    '.json': 'application/json; charset=utf-8',
-    '.png': 'image/png',
-    '.jpg': 'image/jpeg',
-    '.svg': 'image/svg+xml',
-    '.ico': 'image/x-icon'
-  };
-  const contentType = mime[ext] || 'application/octet-stream';
-
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
-      res.writeHead(404, { 'Content-Type': 'text/plain' });
-      res.end('404');
-      return;
-    }
-    res.writeHead(200, { 'Content-Type': contentType });
-    res.end(data);
-  });
-}
-
-const server = http.createServer((req, res) => {
-  const url = new URL(req.url, `http://localhost:${PORT}`);
-  const method = req.method;
-
-  // --- API: listar arquivos ---
-  if (url.pathname === '/api/arquivos' && method === 'GET') {
-    fs.readdir(DADOS_DIR, (err, files) => {
-      if (err) return sendJSON(res, 500, { erro: 'Erro ao ler diretório' });
-      sendJSON(res, 200, files.filter(f => f.endsWith('.json')));
-    });
-    return;
-  }
-
-  // --- API: ler arquivo ---
-  const lerMatch = url.pathname.match(/^\/api\/dados\/(.+)\.json$/);
-  if (lerMatch && method === 'GET') {
-    const nome = lerMatch[1];
-    const filePath = path.join(DADOS_DIR, nome + '.json');
-    if (!filePath.startsWith(DADOS_DIR)) return sendJSON(res, 403, { erro: 'Acesso negado' });
-    fs.readFile(filePath, 'utf-8', (err, data) => {
-      if (err) sendJSON(res, 200, {});
-      else sendJSON(res, 200, JSON.parse(data));
-    });
-    return;
-  }
-
-  // --- API: salvar arquivo ---
-  if (lerMatch && method === 'PUT') {
-    const nome = lerMatch[1];
-    const filePath = path.join(DADOS_DIR, nome + '.json');
-    if (!filePath.startsWith(DADOS_DIR)) return sendJSON(res, 403, { erro: 'Acesso negado' });
-
-    let body = '';
-    req.on('data', chunk => { body += chunk.toString(); });
-    req.on('end', () => {
-      try {
-        const data = JSON.parse(body);
-        fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8', err => {
-          if (err) return sendJSON(res, 500, { erro: 'Erro ao salvar' });
-          sendJSON(res, 200, { ok: true });
-        });
-      } catch(e) {
-        sendJSON(res, 400, { erro: 'JSON inválido' });
-      }
-    });
-    return;
-  }
-
-  // --- API: deletar dado específico dentro de um arquivo ---
-  const delMatch = url.pathname.match(/^\/api\/dados\/(.+)\.json\/(.+)$/);
-  if (delMatch && method === 'DELETE') {
-    const nome = delMatch[1];
-    const chave = decodeURIComponent(delMatch[2]);
-    const filePath = path.join(DADOS_DIR, nome + '.json');
-    if (!filePath.startsWith(DADOS_DIR)) return sendJSON(res, 403, { erro: 'Acesso negado' });
-    fs.readFile(filePath, 'utf-8', (err, data) => {
-      if (err) return sendJSON(res, 404, { erro: 'Arquivo não encontrado' });
-      const obj = JSON.parse(data);
-      if (Array.isArray(obj)) {
-        const idx = obj.findIndex(i => i.semana === Number(chave));
-        if (idx >= 0) obj.splice(idx, 1);
-      } else {
-        if (chave.includes('::')) {
-          const [p1, p2, p3] = chave.split('::');
-          if (obj[p1]?.[p2] !== undefined) delete obj[p1][p2];
-        } else {
-          delete obj[chave];
-        }
-      }
-      fs.writeFile(filePath, JSON.stringify(obj, null, 2), 'utf-8', err => {
-        if (err) return sendJSON(res, 500, { erro: 'Erro ao salvar' });
-        sendJSON(res, 200, { ok: true });
-      });
-    });
-    return;
-  }
-
-  // --- API: listar planos disponíveis ---
-  if (url.pathname === '/api/planos' && method === 'GET') {
-    const planos = [
-      { id: 'cronograma-cesgranrio', nome: 'Cronograma 12 Semanas (Cesgranrio)', grupo: 'Plano Principal' },
-      { id: 'conteudo-programatico', nome: 'Conteúdo Programático Detalhado', grupo: 'Plano Principal' },
-      { id: 'checklist-conteudos', nome: 'Checklist de Conteúdos', grupo: 'Ferramentas' },
-      { id: 'materias/portugues', nome: 'Português', grupo: 'Matérias' },
-      { id: 'materias/matematica', nome: 'Matemática', grupo: 'Matérias' },
-      { id: 'materias/quimica-geral', nome: 'Química Geral e Inorgânica', grupo: 'Matérias' },
-      { id: 'materias/quimica-organica', nome: 'Química Orgânica', grupo: 'Matérias' },
-      { id: 'materias/fisico-quimica', nome: 'Físico-Química', grupo: 'Matérias' },
-      { id: 'materias/quimica-analitica', nome: 'Química Analítica', grupo: 'Matérias' },
-      { id: 'materias/analise-instrumental', nome: 'Análise Instrumental', grupo: 'Matérias' },
-      { id: 'resumos/analise-geral', nome: 'Análise Geral do Concurso', grupo: 'Resumos' },
-      { id: 'resumos/portugues', nome: 'Português - Resumo + Exercícios', grupo: 'Resumos' },
-      { id: 'resumos/matematica', nome: 'Matemática - Resumo + Exercícios', grupo: 'Resumos' },
-      { id: 'resumos/quimica-geral', nome: 'Química Geral e Inorgânica - Resumo + Exercícios', grupo: 'Resumos' },
-      { id: 'resumos/quimica-organica', nome: 'Química Orgânica - Resumo + Exercícios', grupo: 'Resumos' },
-      { id: 'resumos/fisico-quimica', nome: 'Físico-Química - Resumo + Exercícios', grupo: 'Resumos' },
-      { id: 'resumos/tecnicas-laboratorio', nome: 'Técnicas e Titulometria - Resumo + Exercícios', grupo: 'Resumos' },
-      { id: 'simulados/simulado-01', nome: 'Simulado 01 (60 questões)', grupo: 'Simulados' },
-      { id: 'simulados/simulado-02', nome: 'Simulado 02 (60 questões)', grupo: 'Simulados' },
-      { id: 'simulados/simulado-03', nome: 'Simulado 03 (60 questões)', grupo: 'Simulados' },
-      { id: 'ciclo-estudos', nome: 'Ciclo de Estudos (Método dos Aprovados)', grupo: 'Ferramentas' },
-      { id: 'caderno-erros', nome: 'Caderno de Erros', grupo: 'Ferramentas' },
-      { id: 'relatorio-metodos-concurseiros', nome: 'Relatório: Métodos dos Concurseiros', grupo: 'Ferramentas' }
-    ];
-    sendJSON(res, 200, planos);
-    return;
-  }
-
-  // --- API: ler arquivo de plano (.md) ---
-  const planosMatch = url.pathname.match(/^\/api\/plano\/(.+)$/);
-  if (planosMatch && method === 'GET') {
-    const nomeArquivo = planosMatch[1] + '.md';
-    const caminho = path.join(__dirname, nomeArquivo);
-    if (!caminho.startsWith(__dirname)) return sendJSON(res, 403, { erro: 'Acesso negado' });
-    fs.readFile(caminho, 'utf-8', (err, data) => {
-      if (err) return sendJSON(res, 404, { erro: 'Arquivo não encontrado' });
-      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end(data);
-    });
-    return;
-  }
-
-  // --- Arquivos estáticos ---
-  let filePath = url.pathname === '/' ? path.join(SITE_DIR, 'index.html') : path.join(SITE_DIR, url.pathname);
-  if (!filePath.startsWith(SITE_DIR)) return sendJSON(res, 403, { erro: 'Acesso negado' });
-  sendFile(res, filePath);
+// Middlewares
+app.use(express.json()); // Para parsear body de PUT/POST
+app.use((req, res, next) => { // CORS
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  res.header('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE, OPTIONS');
+  next();
 });
 
-function tentarPorta(port) {
-  server.listen(port, () => {
+// --- API: listar arquivos ---
+app.get('/api/arquivos', async (req, res) => {
+  try {
+    const files = await fsPromises.readdir(DADOS_DIR);
+    res.json(files.filter(f => f.endsWith('.json')));
+  } catch (err) {
+    res.status(500).json({ erro: 'Erro ao ler diretório' });
+  }
+});
+
+// --- API: ler arquivo de dados ---
+app.get('/api/dados/:nome.json', async (req, res) => {
+  const nome = req.params.nome;
+  const filePath = path.join(DADOS_DIR, nome + '.json');
+  if (!filePath.startsWith(DADOS_DIR)) return res.status(403).json({ erro: 'Acesso negado' });
+
+  try {
+    const data = await fsPromises.readFile(filePath, 'utf-8');
+    res.json(JSON.parse(data));
+  } catch (err) {
+    res.json({}); // Retorna objeto vazio se o arquivo não existe, como no original
+  }
+});
+
+// --- API: salvar arquivo de dados ---
+app.put('/api/dados/:nome.json', async (req, res) => {
+  const nome = req.params.nome;
+  const filePath = path.join(DADOS_DIR, nome + '.json');
+  if (!filePath.startsWith(DADOS_DIR)) return res.status(403).json({ erro: 'Acesso negado' });
+
+  try {
+    await fsPromises.writeFile(filePath, JSON.stringify(req.body, null, 2), 'utf-8');
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ erro: 'Erro ao salvar' });
+  }
+});
+
+// --- API: deletar dado específico dentro de um arquivo ---
+app.delete('/api/dados/:nome.json/:chave', async (req, res) => {
+  const { nome, chave: chaveEnc } = req.params;
+  const chave = decodeURIComponent(chaveEnc);
+  const filePath = path.join(DADOS_DIR, nome + '.json');
+  if (!filePath.startsWith(DADOS_DIR)) return res.status(403).json({ erro: 'Acesso negado' });
+
+  try {
+    const data = await fsPromises.readFile(filePath, 'utf-8');
+    const obj = JSON.parse(data);
+
+    if (Array.isArray(obj)) {
+      const idx = obj.findIndex(i => i.semana === Number(chave));
+      if (idx >= 0) obj.splice(idx, 1);
+    } else {
+      if (chave.includes('::')) {
+        const [p1, p2] = chave.split('::');
+        if (obj[p1]?.[p2] !== undefined) delete obj[p1][p2];
+      } else {
+        delete obj[chave];
+      }
+    }
+
+    await fsPromises.writeFile(filePath, JSON.stringify(obj, null, 2), 'utf-8');
+    res.json({ ok: true });
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      return res.status(404).json({ erro: 'Arquivo não encontrado' });
+    }
+    res.status(500).json({ erro: 'Erro ao salvar' });
+  }
+});
+
+// --- API: listar planos disponíveis (dinamicamente) ---
+app.get('/api/planos', async (req, res) => {
+  try {
+    const lerDiretorio = async (subDir, grupo) => {
+      const dirCompleto = path.join(PLANOS_DIR, subDir);
+      const entradas = await fsPromises.readdir(dirCompleto, { withFileTypes: true });
+      const planos = [];
+      for (const entrada of entradas) {
+        if (entrada.isFile() && entrada.name.endsWith('.md')) {
+          const id = path.join(subDir, entrada.name.replace('.md', '')).replace(/\\/g, '/');
+          // Transforma 'nome-do-arquivo' em 'Nome Do Arquivo'
+          const nome = entrada.name.replace('.md', '').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+          planos.push({ id, nome, grupo });
+        }
+      }
+      return planos;
+    };
+
+    const grupos = [
+      { path: '', grupo: 'Plano Principal' },
+      { path: 'materias', grupo: 'Matérias' },
+      { path: 'resumos', grupo: 'Resumos' },
+      { path: 'simulados', grupo: 'Simulados' },
+    ];
+
+    const promessas = grupos.map(g => lerDiretorio(g.path, g.grupo));
+    const resultados = await Promise.all(promessas);
+    res.json(resultados.flat());
+  } catch (err) {
+    res.status(500).json({ erro: 'Erro ao listar planos de estudo', detalhe: err.message });
+  }
+});
+
+// Handler para ler arquivos de plano, para evitar duplicação de código
+const planoHandler = async (req, res) => {
+  const { grupo, nome } = req.params;
+  const subPath = grupo ? path.join(grupo, nome) : nome;
+  const caminho = path.join(PLANOS_DIR, subPath + '.md');
+  if (!caminho.startsWith(PLANOS_DIR)) return res.status(403).json({ erro: 'Acesso negado' });
+
+  try {
+    const data = await fsPromises.readFile(caminho, 'utf-8');
+    res.header('Content-Type', 'text/plain; charset=utf-8').send(data);
+  } catch (err) {
+    res.status(404).json({ erro: 'Arquivo não encontrado' });
+  }
+};
+
+// --- API: ler arquivo de plano (.md) --- (Rotas dinâmicas)
+app.get('/api/plano/:grupo/:nome', planoHandler); // Para URLs como /api/plano/materias/quimica-geral
+app.get('/api/plano/:nome', planoHandler);      // Para URLs como /api/plano/ciclo-estudos
+
+// --- Servir arquivos estáticos ---
+app.use(express.static(SITE_DIR));
+
+function tentarPorta(port) { // A função de tentar portas continua útil
+  const server = app.listen(port, () => {
     const addr = `http://localhost:${port}`;
     console.log(`\n  🧪 Petrobras Study Tracker\n  ${addr}\n`);
   });
