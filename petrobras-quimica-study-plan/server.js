@@ -143,7 +143,10 @@ const server = http.createServer((req, res) => {
       { id: 'resumos/tecnicas-laboratorio', nome: 'Técnicas e Titulometria - Resumo + Exercícios', grupo: 'Resumos' },
       { id: 'simulados/simulado-01', nome: 'Simulado 01 (60 questões)', grupo: 'Simulados' },
       { id: 'simulados/simulado-02', nome: 'Simulado 02 (60 questões)', grupo: 'Simulados' },
-      { id: 'simulados/simulado-03', nome: 'Simulado 03 (60 questões)', grupo: 'Simulados' }
+      { id: 'simulados/simulado-03', nome: 'Simulado 03 (60 questões)', grupo: 'Simulados' },
+      { id: 'ciclo-estudos', nome: 'Ciclo de Estudos (Método dos Aprovados)', grupo: 'Ferramentas' },
+      { id: 'caderno-erros', nome: 'Caderno de Erros', grupo: 'Ferramentas' },
+      { id: 'relatorio-metodos-concurseiros', nome: 'Relatório: Métodos dos Concurseiros', grupo: 'Ferramentas' }
     ];
     sendJSON(res, 200, planos);
     return;
