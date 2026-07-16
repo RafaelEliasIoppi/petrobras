@@ -57,8 +57,11 @@ const app = createApp({
     const tituloView = computed(() => ({
       dashboard: 'Dashboard',
       checklist: 'Conteúdos',
+      ciclo: 'Ciclo de Estudos',
       horas: 'Quadro de Horas',
       simulados: 'Simulados',
+      erros: 'Caderno de Erros',
+      diario: 'Diário de Estudos',
       plano: 'Plano de Estudos'
     })[view.value]);
 
