@@ -133,7 +133,15 @@ const server = http.createServer((req, res) => {
       { id: 'materias/quimica-organica', nome: 'Química Orgânica', grupo: 'Matérias' },
       { id: 'materias/fisico-quimica', nome: 'Físico-Química', grupo: 'Matérias' },
       { id: 'materias/quimica-analitica', nome: 'Química Analítica', grupo: 'Matérias' },
-      { id: 'materias/analise-instrumental', nome: 'Análise Instrumental', grupo: 'Matérias' }
+      { id: 'materias/analise-instrumental', nome: 'Análise Instrumental', grupo: 'Matérias' },
+      { id: 'resumos/analise-geral', nome: 'Análise Geral do Concurso', grupo: 'Resumos' },
+      { id: 'resumos/portugues', nome: 'Português - Resumo + Exercícios', grupo: 'Resumos' },
+      { id: 'resumos/matematica', nome: 'Matemática - Resumo + Exercícios', grupo: 'Resumos' },
+      { id: 'resumos/quimica-geral', nome: 'Química Geral e Inorgânica - Resumo + Exercícios', grupo: 'Resumos' },
+      { id: 'resumos/quimica-organica', nome: 'Química Orgânica - Resumo + Exercícios', grupo: 'Resumos' },
+      { id: 'resumos/fisico-quimica', nome: 'Físico-Química - Resumo + Exercícios', grupo: 'Resumos' },
+      { id: 'resumos/tecnicas-laboratorio', nome: 'Técnicas e Titulometria - Resumo + Exercícios', grupo: 'Resumos' },
+      { id: 'simulados/simulado-01', nome: 'Simulado Completo (60 questões)', grupo: 'Simulados' }
     ];
     sendJSON(res, 200, planos);
     return;
