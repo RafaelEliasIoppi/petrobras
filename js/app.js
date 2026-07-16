@@ -81,6 +81,7 @@ function useErros() {
   const erros = ref([]);
   const formErro = ref({ materia: '', topico: '', descricao: '', pensamento: '', respostaCorreta: '', lacuna: '', tipo: 'B' });
   const editandoErro = ref(null);
+  const carregandoErros = ref(false);
 
   const errosAgrupados = computed(() => {
     const grupos = {};
@@ -93,6 +94,13 @@ function useErros() {
   });
 
   const totalErros = computed(() => erros.value.length);
+
+  async function carregarErros() {
+    if (erros.value.length > 0) return; // Evita recarregar se já tiver dados
+    carregandoErros.value = true;
+    erros.value = await Armazenamento.getErros();
+    carregandoErros.value = false;
+  }
 
   function novoErro() {
     editandoErro.value = { id: Date.now(), data: new Date().toISOString().slice(0, 10), ...formErro.value };
@@ -134,8 +142,8 @@ function useErros() {
   }
 
   return {
-    erros, formErro, editandoErro, errosAgrupados, totalErros,
-    novoErro, salvarErro, editarErro, removerErro, cancelarErro
+    erros, formErro, editandoErro, errosAgrupados, totalErros, carregandoErros,
+    novoErro, salvarErro, editarErro, removerErro, cancelarErro, carregarErros
   };
 }
 
@@ -359,6 +367,55 @@ function useChecklist(conteudosData) {
   };
 }
 
+function useRevisoes(revisaoIntervalos) {
+  const revisoes = ref([]);
+
+  const revisoesPendentes = computed(() => {
+    const hoje = new Date();
+    return revisoes.value.filter(r => new Date(r.data) <= hoje && !r.concluida);
+  });
+
+  const revisoesHoje = computed(() => {
+    const hoje = new Date().toISOString().slice(0, 10);
+    return revisoesPendentes.value.filter(r => r.data === hoje);
+  });
+
+  async function agendarRevisao(topico, materia, dataEstudo) {
+    const dt = new Date(dataEstudo);
+    const novasRevisoes = [];
+    for (const iv of revisaoIntervalos) {
+      const dataRev = new Date(dt);
+      dataRev.setDate(dataRev.getDate() + iv.dias);
+      const rev = {
+        id: `${topico}-${iv.id}-${Date.now()}`,
+        topico, materia,
+        data: dataRev.toISOString().slice(0, 10),
+        intervalo: iv.rotulo,
+        concluida: false
+      };
+      novasRevisoes.push(rev);
+      await Armazenamento.salvarRevisao(rev); // Salva uma por uma
+    }
+    revisoes.value.push(...novasRevisoes); // Atualização reativa em massa
+  }
+
+  async function concluirRevisao(id) {
+    const rev = revisoes.value.find(r => r.id === id);
+    if (rev) {
+      rev.concluida = true; // Atualização reativa
+      await Armazenamento.salvarRevisao(rev);
+    }
+  }
+
+  async function removerRevisao(id) {
+    const idx = revisoes.value.findIndex(r => r.id === id);
+    if (idx > -1) revisoes.value.splice(idx, 1); // Atualização reativa
+    await Armazenamento.removerRevisao(id);
+  }
+
+  return { revisoes, revisoesPendentes, revisoesHoje, agendarRevisao, concluirRevisao, removerRevisao };
+}
+
 // ===================================================================
 //  APLICAÇÃO VUE - O Orquestrador
 // ===================================================================
@@ -379,14 +436,11 @@ const app = createApp({
     const semanasPlano = SEMANAS_PLANO;
     const metaHoras = META_HORAS_SEMANA;
 
-    // --- Estado Reativo das Features (delegado para composables quando complexo) ---
-    const revisoes = ref([]);
-
     // --- Usando o Composable para a feature de Simulados ---
     const { simulados, formSimulado, simuladosOrdenados, formSimuladoTotal, salvarSimulado, removerSimulado, simuladoStatus } = useSimulados(semanasPlano);
 
     // --- Usando o Composable para a feature de Caderno de Erros ---
-    const { erros, formErro, editandoErro, errosAgrupados, totalErros, novoErro, salvarErro, editarErro, removerErro, cancelarErro } = useErros();
+    const { erros, formErro, editandoErro, errosAgrupados, totalErros, carregandoErros, novoErro, salvarErro, editarErro, removerErro, cancelarErro, carregarErros } = useErros();
 
     // --- Usando o Composable para a feature de Ciclo de Estudos ---
     const { ciclo, cicloExpandido, materiaAtual, cicloCompleto, avancarCiclo, reiniciarCiclo } = useCiclo(CICLO_ESTUDOS);
@@ -413,6 +467,9 @@ const app = createApp({
             totalGeral, totalConcluidoGeral, progressoGeral,
             conteudosFiltrados, expandirTudo, colapsarTudo } = useChecklist(CONTEUDOS);
 
+    // --- Usando o Composable para a feature de Revisões ---
+    const { revisoes, revisoesPendentes, revisoesHoje, agendarRevisao, concluirRevisao, removerRevisao } = useRevisoes(REVISAO_INTERVALOS);
+
 
     const horasSemanaAtual = computed(() => horasSemana(semanaAtual.value));
     const metaSemanaCss = computed(() => {
@@ -438,12 +495,19 @@ const app = createApp({
       checklist.value = await Armazenamento.getChecklist();
       horas.value = await Armazenamento.getHoras(); // Exemplo de como outras features seriam carregadas
       simulados.value = await Armazenamento.getSimulados();
-      erros.value = await Armazenamento.getErros();
+      // erros.value = await Armazenamento.getErros(); // << REMOVIDO DAQUI
       diario.value = await Armazenamento.getDiario();
       revisoes.value = await Armazenamento.getRevisoes();
       ciclo.value = await Armazenamento.getCiclo();
       initPlanos();
       carregando.value = false;
+    });
+
+    // Observador para carregar dados sob demanda (Lazy Loading)
+    watch(view, (novaView) => {
+      if (novaView === 'erros') {
+        carregarErros();
+      }
     });
 
     const tituloView = computed(() => ({
@@ -513,50 +577,6 @@ const app = createApp({
       } catch {}
     }
 
-    // --- Revisões ---
-    const revisoesPendentes = computed(() => {
-      const hoje = new Date();
-      return revisoes.value.filter(r => new Date(r.data) <= hoje && !r.concluida);
-    });
-
-    const revisoesHoje = computed(() => {
-      const hoje = new Date().toISOString().slice(0, 10);
-      return revisoesPendentes.value.filter(r => r.data === hoje);
-    });
-
-    async function agendarRevisao(topico, materia, dataEstudo) {
-      const dt = new Date(dataEstudo);
-      REVISAO_INTERVALOS.forEach(async iv => {
-        const dataRev = new Date(dt);
-        dataRev.setDate(dataRev.getDate() + iv.dias);
-        const rev = {
-          id: `${topico}-${iv.id}-${Date.now()}`,
-          topico,
-          materia,
-          data: dataRev.toISOString().slice(0, 10),
-          intervalo: iv.rotulo,
-          concluida: false
-        };
-        await Armazenamento.salvarRevisao(rev);
-      });
-      revisoes.value = await Armazenamento.getRevisoes();
-    }
-
-    async function concluirRevisao(id) {
-      const lista = await Armazenamento.getRevisoes();
-      const rev = lista.find(r => r.id === id);
-      if (rev) {
-        rev.concluida = true;
-        await Armazenamento.salvarRevisao(rev);
-      }
-      revisoes.value = await Armazenamento.getRevisoes();
-    }
-
-    async function removerRevisao(id) {
-      await Armazenamento.removerRevisao(id);
-      revisoes.value = await Armazenamento.getRevisoes();
-    }
-
     // --- Nav ---
     function irPara(v) {
       view.value = v;
@@ -596,12 +616,13 @@ const app = createApp({
       irPara, alternarTema,
       // Expondo tudo do Composable de Erros
       erros, formErro, editandoErro, errosAgrupados, totalErros,
-      novoErro, salvarErro, editarErro, removerErro, cancelarErro,
+      carregandoErros, novoErro, salvarErro, editarErro, removerErro, cancelarErro,
       // Expondo tudo do Composable de Diário
       CHECKLIST_ITENS, diario, diarioData, diarioHoje, diarioProgresso, alternarDiario,
-      // Expondo tudo do Composable de Ciclo de Estudos
+      // Expondo tudo do Composable de Revisões
       revisoes, revisoesPendentes, revisoesHoje,
       agendarRevisao, concluirRevisao, removerRevisao,
+      // Expondo tudo do Composable de Ciclo de Estudos
       ciclo, materiaAtual, cicloCompleto, cicloExpandido,
       avancarCiclo, reiniciarCiclo,
       CICLO_ESTUDOS, REVISAO_INTERVALOS, DIAS_SEMANA,

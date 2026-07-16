@@ -73,18 +73,23 @@ const Armazenamento = {
 
   async _deleteFromServer(nome, chave) {
     await this._init();
-    if (!this._usaServer) return;
+    if (!this._usaServer) return { ok: true, offline: true };
     try {
-      await fetch(`${API_BASE}/${nome}.json/${encodeURIComponent(chave)}`, { method: 'DELETE' });
+      const response = await fetch(`${API_BASE}/${nome}.json/${encodeURIComponent(chave)}`, { method: 'DELETE' });
+      return { ok: response.ok };
     } catch (err) {
       console.error(`Falha ao deletar chave '${chave}' de '${nome}' no servidor:`, err);
+      return { ok: false, error: err };
     }
   },
 
   _mergeObj(server, local) {
     // A estratégia de merge pode ser aprimorada, mas para este caso,
     // o dado local (mais recente) tem preferência sobre o do servidor.
-    return { ...server, ...local };
+    // Garante que ambos sejam objetos para evitar erros com null/undefined.
+    const localObj = (typeof local === 'object' && local !== null && !Array.isArray(local)) ? local : {};
+    const serverObj = (typeof server === 'object' && server !== null && !Array.isArray(server)) ? server : {};
+    return { ...serverObj, ...localObj };
   },
 
   _mergeArray(server, local) {
@@ -93,7 +98,7 @@ const Armazenamento = {
     
     const mapa = new Map();
     // A chave de identificação pode variar (semana, id, etc.)
-    const getKey = (item) => item.id || item.semana;
+    const getKey = (item) => (typeof item === 'object' && item !== null) ? (item.id ?? item.semana) : null;
 
     // Dados do servidor são a base, dados locais sobrescrevem
     [...server, ...local].forEach(item => {
@@ -166,7 +171,7 @@ const Armazenamento = {
     const idx = lista.findIndex(s => s.semana === semana);
     if (idx >= 0) lista.splice(idx, 1);
     this._salvarLocal('simulados', lista);
-    return this._putToServer('simulados', lista);
+    return this._deleteFromServer('simulados', semana);
   },
 
   // --- Erros (Caderno de Erros) ---
@@ -188,7 +193,7 @@ const Armazenamento = {
     const idx = lista.findIndex(e => e.id === id);
     if (idx >= 0) lista.splice(idx, 1);
     this._salvarLocal('erros', lista);
-    return this._putToServer('erros', lista);
+    return this._deleteFromServer('erros', id);
   },
 
   // --- Diário (Daily Checklist) ---
@@ -222,7 +227,7 @@ const Armazenamento = {
     const idx = lista.findIndex(r => r.id === id);
     if (idx >= 0) lista.splice(idx, 1);
     this._salvarLocal('revisoes', lista);
-    return this._putToServer('revisoes', lista);
+    return this._deleteFromServer('revisoes', id);
   },
 
   // --- Ciclo (posição atual) ---
