@@ -77,7 +77,7 @@ const server = http.createServer((req, res) => {
     if (!filePath.startsWith(DADOS_DIR)) return sendJSON(res, 403, { erro: 'Acesso negado' });
 
     let body = '';
-    req.on('data', chunk => body += chunk);
+    req.on('data', chunk => { body += chunk.toString(); });
     req.on('end', () => {
       try {
         const data = JSON.parse(body);
