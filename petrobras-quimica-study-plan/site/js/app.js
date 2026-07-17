@@ -1720,7 +1720,7 @@ const app = createApp({
     const { simulados, formSimulado, simuladosOrdenados, formSimuladoTotal, salvarSimulado, removerSimulado, simuladoStatus } = useSimulados(semanasPlano);
 
     // --- Usando o Composable para a feature de Caderno de Erros ---
-    const { erros, formErro, editandoErro, errosAgrupados, totalErros, carregandoErros, novoErro, salvarErro, editarErro, removerErro, cancelarErro, carregarErros } = useErros();
+    const { erros, editandoErro, errosAgrupados, totalErros, carregandoErros, novoErro, salvarErro, editarErro, removerErro, cancelarErro, carregarErros, errosPorMateria, errosFrequentes, regrasDeOuro, registrarRevisao, marcarRevisaoAcertou } = useErros();
 
     // --- Usando o Composable para a feature de Ciclo de Estudos ---
     const { ciclo, cicloExpandido, materiaAtual, idxOriginalAtual, cicloCompleto, completosPorItem, avancarCiclo, reiniciarCiclo } = useCiclo(CICLO_ESTUDOS);
