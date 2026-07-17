@@ -7,6 +7,13 @@ $Site = Join-Path $Root "petrobras-quimica-study-plan"
 
 Write-Host "🚀 Iniciando Petrobras Study Tracker..." -ForegroundColor Cyan
 
+# Mata processo na porta 3000 antes de tudo
+Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue | ForEach-Object {
+  Write-Host "🔒 Encerrando processo na porta 3000 (PID: $($_.OwningProcess))..." -ForegroundColor Yellow
+  Stop-Process -Id $_.OwningProcess -Force
+}
+Start-Sleep -Milliseconds 500
+
 function Install-Deps($Dir, $Label) {
   if (-not (Test-Path (Join-Path $Dir "node_modules"))) {
     Write-Host "📦 Instalando dependencias ($Label)..." -ForegroundColor Yellow
@@ -16,13 +23,6 @@ function Install-Deps($Dir, $Label) {
 
 Install-Deps $Site "Express"
 if (-not $NoFrontend) { Install-Deps $Root "Vite" }
-
-# Kill porta 3000
-Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue | ForEach-Object {
-  $pid = $_.OwningProcess
-  Write-Host "🔒 Encerrando processo na porta 3000 (PID: $pid)..." -ForegroundColor Yellow
-  Stop-Process -Id $pid -Force
-}
 
 # Inicia Express
 $serverJob = Start-Job -ScriptBlock {
