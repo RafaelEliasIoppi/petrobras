@@ -45,6 +45,7 @@ const conteudos = CONTEUDOS;
           <div class="grupo-titulo" @click="toggleGrupo(m.id, g.nome)">
             {{ gruposAbertos[m.id+'-'+g.nome] ? '▼' : '▶' }} {{ g.nome }}
             <span style="font-size:12px;color:var(--texto-sec);font-weight:400;">({{ itensConcluidosGrupo(m.id, g) }}/{{ g.topicos.length }})</span>
+            <span v-if="g.exercicios_sugeridos" style="font-size:11px;color:var(--aviso);font-weight:400;margin-left:8px;">🎯 {{ g.exercicios_sugeridos }} exercícios</span>
           </div>
           <div v-show="gruposAbertos[m.id+'-'+g.nome]">
             <label v-for="(t, idx) in g.topicos" :key="t" class="item-check" :class="{ concluido: checklist[`${m.id}-${g.nome}-${idx}`] }">

@@ -54,6 +54,10 @@ export function useChecklist() {
   const totalGeral = computed(() => CONTEUDOS.reduce((acc, m) => acc + totalItens(m), 0));
   const totalConcluidoGeral = computed(() => CONTEUDOS.reduce((acc, m) => acc + itensConcluidos(m), 0));
 
+  const totalExerciciosSugeridos = computed(() =>
+    CONTEUDOS.reduce((acc, m) => acc + m.grupos.reduce((s, g) => s + (g.exercicios_sugeridos || 0), 0), 0)
+  );
+
   const progressoGeral = computed(() => {
     if (totalGeral.value === 0) return 0;
     return Math.round((totalConcluidoGeral.value / totalGeral.value) * 100);
@@ -88,6 +92,6 @@ export function useChecklist() {
     gruposAbertos.value = {};
   }
 
-  instance = { checklist, progressoGeral, progressoMateria, itensConcluidos, totalItens, totalGeral, totalConcluidoGeral, filtro, gruposAbertos, conteudosFiltrados, alternarItem, itensConcluidosGrupo, toggleGrupo, expandirTudo, colapsarTudo };
+  instance = { checklist, progressoGeral, progressoMateria, itensConcluidos, totalItens, totalGeral, totalConcluidoGeral, totalExerciciosSugeridos, filtro, gruposAbertos, conteudosFiltrados, alternarItem, itensConcluidosGrupo, toggleGrupo, expandirTudo, colapsarTudo };
   return instance;
 }

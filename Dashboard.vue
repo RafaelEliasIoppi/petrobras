@@ -7,7 +7,7 @@ import { useDiario } from './useDiario.js';
 import { useCiclo } from './useCiclo.js';
 import { CONTEUDOS, META_HORAS_SEMANA } from './dados.js';
 
-const { progressoGeral, progressoMateria, itensConcluidos, totalItens } = useChecklist();
+const { progressoGeral, progressoMateria, itensConcluidos, totalItens, totalExerciciosSugeridos } = useChecklist();
 const { horasSemanaAtual, metaSemanaCss } = useHoras();
 const { simuladoStatus } = useSimulados();
 const { totalErros } = useErros();
@@ -47,6 +47,10 @@ const metaHoras = META_HORAS_SEMANA;
       <div class="cartao-stat" style="border-top-color:#8b5cf6;">
         <div class="valor" style="font-size:20px;color:#8b5cf6;">{{ cicloCompleto }}%</div>
         <div class="rotulo">Ciclo concluído</div>
+      </div>
+      <div class="cartao-stat" style="border-top-color:#f59e0b;">
+        <div class="valor" style="font-size:20px;color:#f59e0b;">{{ totalExerciciosSugeridos }}</div>
+        <div class="rotulo">Exercícios sugeridos</div>
       </div>
       <div class="cartao-stat" :class="revisoesHoje.length > 0 ? 'vermelho' : 'verde'">
         <div class="valor" style="font-size:20px;">{{ revisoesHoje.length }}</div>

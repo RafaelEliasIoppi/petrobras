@@ -37,6 +37,9 @@
         <a href="#erros" class="nav-item" :class="{ ativa: view === 'erros' }" @click.prevent="irPara('erros')">
           <span class="icone">📕</span> Erros
         </a>
+        <a href="#exercicios" class="nav-item" :class="{ ativa: view === 'exercicios' }" @click.prevent="irPara('exercicios')">
+          <span class="icone">📝</span> Questões
+        </a>
         <a href="#diario" class="nav-item" :class="{ ativa: view === 'diario' }" @click.prevent="irPara('diario')">
           <span class="icone">📌</span> Diário
         </a>
@@ -825,6 +828,246 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+</template>
+
+<!-- EXERCICIOS / BANCO DE QUESTÕES -->
+<template v-if="view === 'exercicios'">
+  <div v-if="revisao">
+    <div class="grade-cartoes">
+      <div class="cartao-stat" :class="quizAcertos/quizTotal >= 0.7 ? 'verde' : quizAcertos/quizTotal >= 0.5 ? 'laranja' : 'vermelho'">
+        <div class="valor" style="font-size:28px;">{{ quizAcertos }}/{{ quizTotal }}</div>
+        <div class="rotulo">Acertos</div>
+      </div>
+      <div class="cartao-stat" :class="quizAcertos/quizTotal >= 0.7 ? 'verde' : quizAcertos/quizTotal >= 0.5 ? 'laranja' : 'vermelho'">
+        <div class="valor">{{ quizTotal > 0 ? Math.round(quizAcertos/quizTotal*100) : 0 }}%</div>
+        <div class="rotulo">Percentual</div>
+      </div>
+      <div class="cartao-stat" style="cursor:pointer;" @click="toggleRevisao">
+        <div class="valor" style="font-size:20px;">{{ quizQuestoes.length }}</div>
+        <div class="rotulo">Total de questões (clique para revisar)</div>
+      </div>
+    </div>
+
+    <div v-if="!revisao" class="card" style="text-align:center;padding:30px;">
+      <div style="font-size:48px;margin-bottom:12px;">{{ quizAcertos/quizTotal >= 0.7 ? '🎉' : quizAcertos/quizTotal >= 0.5 ? '💪' : '📚' }}</div>
+      <div style="font-size:18px;font-weight:600;margin-bottom:8px;">
+        {{ quizAcertos/quizTotal >= 0.7 ? 'Ótimo desempenho!' : quizAcertos/quizTotal >= 0.5 ? 'Continue praticando!' : 'Estude mais e tente novamente!' }}
+      </div>
+      <div style="font-size:14px;color:var(--texto-sec);margin-bottom:16px;">
+        Você acertou {{ quizAcertos }} de {{ quizTotal }} questões ({{ quizTotal > 0 ? Math.round(quizAcertos/quizTotal*100) : 0 }}%)
+      </div>
+      <button @click="iniciarQuiz" style="padding:10px 24px;background:var(--primaria);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px;font-family:inherit;">
+        🔄 Novo Quiz
+      </button>
+    </div>
+
+    <div v-if="revisao" class="card">
+      <div class="card-titulo">Revisão por Questão</div>
+      <div v-for="(q, i) in quizQuestoes" :key="q.id" style="padding:14px;border:1px solid var(--borda);border-radius:8px;margin-bottom:10px;font-size:14px;"
+        :style="{ borderLeft: '4px solid ' + (respostas[i] === q.correta ? 'var(--sucesso)' : 'var(--erro)') }">
+        <div style="display:flex;justify-content:space-between;align-items:start;gap:8px;">
+          <div style="flex:1;">
+            <strong>Q{{ i+1 }}.</strong>
+            <span :style="{ color: respostas[i] === q.correta ? 'var(--sucesso)' : 'var(--erro)', fontWeight:600, marginLeft:'8px' }">
+              {{ respostas[i] === q.correta ? '✓ Correto' : '✗ Errado' }}
+            </span>
+            <div style="margin-top:6px;color:var(--texto-sec);font-size:13px;">
+              {{ q.materia }} · {{ q.grupo }} · {{ q.dificuldade }}
+            </div>
+          </div>
+          <button @click="alternarFavorito(q.id)" style="background:none;border:none;cursor:pointer;font-size:18px;padding:4px;" :title="favoritos.includes(q.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'">
+            {{ favoritos.includes(q.id) ? '⭐' : '☆' }}
+          </button>
+        </div>
+      </div>
+      <button @click="iniciarQuiz" style="padding:10px 24px;background:var(--primaria);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-family:inherit;margin-top:8px;">
+        🔄 Novo Quiz
+      </button>
+    </div>
+  </div>
+
+  <div v-else-if="modoQuiz">
+    <div class="grade-cartoes">
+      <div class="cartao-stat azul">
+        <div class="valor">{{ quizProgresso }}%</div>
+        <div class="rotulo">Progresso</div>
+      </div>
+      <div class="cartao-stat" style="font-size:14px;">
+        <div class="valor" style="font-size:20px;">{{ quizIndex + 1 }} / {{ quizQuestoes.length }}</div>
+        <div class="rotulo">Questão</div>
+      </div>
+      <div class="cartao-stat" :class="quizAcertos > 0 ? 'verde' : ''">
+        <div class="valor" style="font-size:20px;">{{ quizAcertos }} / {{ Object.keys(respostas).length }}</div>
+        <div class="rotulo">Acertos</div>
+      </div>
+    </div>
+
+    <div class="card" v-if="quizAtual">
+      <div class="card-titulo" style="font-size:13px;color:var(--texto-sec);justify-content:flex-start;gap:12px;">
+        <span style="background:var(--primaria);color:#fff;padding:2px 10px;border-radius:12px;font-size:11px;">{{ quizAtual.dificuldade }}</span>
+        <span>{{ quizAtual.materia }} · {{ quizAtual.grupo }}</span>
+      </div>
+
+      <div style="padding:8px 0 20px;font-size:15px;line-height:1.6;">
+        <strong>Questão {{ quizIndex + 1 }}:</strong> {{ quizAtual.enunciado }}
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div v-for="(alt, idx) in quizAtual.alternativas" :key="idx"
+          @click="responderQuestao(idx)"
+          style="padding:12px 16px;border:2px solid var(--borda);border-radius:8px;cursor:pointer;font-size:14px;transition:all 0.2s;"
+          :style="{
+            borderColor: responded ? (idx === quizAtual.correta ? 'var(--sucesso)' : idx === selecionado ? 'var(--erro)' : 'var(--borda)') : (selecionado === idx ? 'var(--primaria)' : 'var(--borda)'),
+            background: responded ? (idx === quizAtual.correta ? '#ecfdf5' : idx === selecionado ? '#fef2f2' : 'transparent') : (selecionado === idx ? '#eff6ff' : 'transparent'),
+            cursor: responded ? 'default' : 'pointer',
+            opacity: responded && idx !== selecionado && idx !== quizAtual.correta ? 0.5 : 1
+          }">
+          <span v-if="responded && idx === quizAtual.correta" style="margin-right:8px;">✓</span>
+          <span v-else-if="responded && idx === selecionado && idx !== quizAtual.correta" style="margin-right:8px;">✗</span>
+          <span v-else style="margin-right:8px;">{{ ['A','B','C','D','E'][idx] }})</span>
+          {{ alt.replace(/^[A-E]\)\s*/, '') }}
+        </div>
+      </div>
+
+      <div v-if="responded" style="margin-top:16px;padding:16px;border-radius:8px;font-size:14px;line-height:1.5;"
+        :style="{ background: selecionado === quizAtual.correta ? '#ecfdf5' : '#fef2f2', color: selecionado === quizAtual.correta ? '#065f46' : '#991b1b' }">
+        <strong>{{ selecionado === quizAtual.correta ? '✅ Correto!' : '❌ Incorreto!' }}</strong>
+        <div style="margin-top:4px;">
+          Resposta correta: <strong>{{ ['A','B','C','D','E'][quizAtual.correta] }}) {{ quizAtual.alternativas[quizAtual.correta].replace(/^[A-E]\)\s*/, '') }}</strong>
+        </div>
+        <div v-if="mostrarExplicacao" style="margin-top:12px;padding:12px;background:var(--card);border-radius:6px;color:var(--texto);border:1px solid var(--borda);">
+          <strong>💡 Explicação:</strong> {{ quizAtual.explicacao }}
+        </div>
+        <button @click="toggleExplicacao" style="margin-top:8px;background:none;border:1px solid var(--borda);border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px;font-family:inherit;">
+          {{ mostrarExplicacao ? 'Ocultar' : 'Mostrar' }} explicação
+        </button>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
+        <button @click="voltarQuestao" :disabled="quizIndex === 0"
+          style="padding:8px 20px;background:var(--card);color:var(--texto);border:1px solid var(--borda);border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit;"
+          :style="{ opacity: quizIndex === 0 ? 0.4 : 1 }">
+          ‹ Anterior
+        </button>
+        <button v-if="quizIndex < quizQuestoes.length - 1" @click="proximaQuestao"
+          style="padding:8px 20px;background:var(--primaria);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit;">
+          Próxima ›
+        </button>
+        <button v-else @click="finalizarQuiz"
+          style="padding:8px 20px;background:var(--sucesso);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit;">
+          ✓ Finalizar Quiz
+        </button>
+        <button @click="finalizarQuiz" style="padding:8px 20px;background:transparent;color:var(--texto-sec);border:1px solid var(--borda);border-radius:6px;cursor:pointer;font-size:13px;font-family:inherit;">
+          Encerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div v-else>
+    <div class="grade-cartoes">
+      <div class="cartao-stat" style="border-top-color:#8b5cf6;">
+        <div class="valor" style="font-size:24px;color:#8b5cf6;">{{ EXERCICIOS.length }}</div>
+        <div class="rotulo">Total de questões</div>
+      </div>
+      <div class="cartao-stat" style="border-top-color:#8b5cf6;">
+        <div class="valor" style="font-size:24px;color:#8b5cf6;">{{ questoesFiltradas.length }}</div>
+        <div class="rotulo">Filtradas</div>
+      </div>
+      <div class="cartao-stat" style="border-top-color:#f59e0b;">
+        <div class="valor" style="font-size:20px;color:#f59e0b;">{{ favoritos.length }}</div>
+        <div class="rotulo">Favoritas</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-titulo">Filtros</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;">
+        <div style="flex:1;min-width:160px;">
+          <label style="font-size:12px;color:var(--texto-sec);display:block;margin-bottom:4px;">Matéria</label>
+          <select v-model="filtroMateria" style="width:100%;padding:8px 10px;border:1px solid var(--borda);border-radius:6px;font-size:14px;font-family:inherit;background:var(--card);color:var(--texto);">
+            <option value="">Todas</option>
+            <option v-for="m in materiasDisponiveis" :key="m" :value="m">{{ m }}</option>
+          </select>
+        </div>
+        <div style="flex:1;min-width:160px;">
+          <label style="font-size:12px;color:var(--texto-sec);display:block;margin-bottom:4px;">Grupo</label>
+          <select v-model="filtroGrupo" style="width:100%;padding:8px 10px;border:1px solid var(--borda);border-radius:6px;font-size:14px;font-family:inherit;background:var(--card);color:var(--texto);">
+            <option value="">Todos</option>
+            <option v-for="g in gruposDisponiveis" :key="g" :value="g">{{ g }}</option>
+          </select>
+        </div>
+        <div style="flex:1;min-width:160px;">
+          <label style="font-size:12px;color:var(--texto-sec);display:block;margin-bottom:4px;">Dificuldade</label>
+          <div style="display:flex;gap:4px;">
+            <button v-for="d in ['', 'Fácil', 'Médio', 'Difícil']" :key="d" @click="filtroDificuldade = d"
+              style="flex:1;padding:8px;border:1px solid var(--borda);border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;transition:all 0.2s;"
+              :style="{ background: filtroDificuldade === d ? 'var(--primaria)' : 'var(--card)', color: filtroDificuldade === d ? '#fff' : 'var(--texto)', fontWeight: filtroDificuldade === d ? 600 : 400 }">
+              {{ d || 'Todas' }}
+            </button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;padding-bottom:4px;">
+          <input type="checkbox" v-model="mostrarFavoritos" id="favFilter" style="accent-color:var(--primaria);">
+          <label for="favFilter" style="font-size:13px;cursor:pointer;">⭐ Favoritas</label>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <button @click="iniciarQuiz"
+          style="padding:10px 28px;background:var(--primaria);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px;font-family:inherit;font-weight:500;"
+          :disabled="questoesFiltradas.length === 0"
+          :style="{ opacity: questoesFiltradas.length === 0 ? 0.5 : 1 }">
+          ▶ Iniciar Quiz ({{ questoesFiltradas.length }} questões)
+        </button>
+        <button @click="filtroMateria = ''; filtroGrupo = ''; filtroDificuldade = ''; mostrarFavoritos = false;"
+          style="padding:8px 16px;background:transparent;color:var(--texto-sec);border:1px solid var(--borda);border-radius:6px;cursor:pointer;font-size:13px;font-family:inherit;">
+          Limpar filtros
+        </button>
+      </div>
+    </div>
+
+    <div class="card" v-if="questoesFiltradas.length > 0">
+      <div class="card-titulo">
+        <span>Questões ({{ questoesFiltradas.length }})</span>
+        <span style="font-size:13px;color:var(--texto-sec);font-weight:400;">
+          {{ favoritos.filter(f => questoesFiltradas.some(q => q.id === f)).length }} favoritas
+        </span>
+      </div>
+
+      <div v-for="q in questoesFiltradas" :key="q.id" style="padding:16px;border:1px solid var(--borda);border-radius:8px;margin-bottom:12px;font-size:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:start;gap:8px;">
+          <div style="flex:1;">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
+              <span style="background:var(--primaria);color:#fff;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;">{{ q.dificuldade }}</span>
+              <span style="color:var(--texto-sec);font-size:12px;">{{ q.materia }} · {{ q.grupo }}</span>
+            </div>
+            <div style="font-weight:500;margin-bottom:8px;">{{ q.enunciado }}</div>
+            <div style="font-size:13px;color:var(--texto-sec);line-height:1.6;">
+              <div v-for="(alt, i) in q.alternativas" :key="i" style="padding:2px 0;">
+                {{ alt }}
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
+            <button @click="alternarFavorito(q.id)" style="background:none;border:none;cursor:pointer;font-size:20px;padding:4px;" :title="favoritos.includes(q.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'">
+              {{ favoritos.includes(q.id) ? '⭐' : '☆' }}
+            </button>
+            <button @click="toggleExplicacao" style="background:none;border:1px solid var(--borda);border-radius:4px;cursor:pointer;font-size:12px;padding:4px 8px;font-family:inherit;color:var(--texto-sec);">
+              💡
+            </button>
+          </div>
+        </div>
+        <div v-if="mostrarExplicacao" style="margin-top:12px;padding:12px;background:var(--bg);border-radius:6px;font-size:13px;color:var(--texto);">
+          <strong>✓ Resposta: {{ ['A','B','C','D','E'][q.correta] }}</strong> — {{ q.explicacao }}
+        </div>
+      </div>
+    </div>
+
+    <div class="card" v-if="questoesFiltradas.length === 0" style="text-align:center;padding:40px;color:var(--texto-sec);">
+      Nenhuma questão encontrada com os filtros atuais.
     </div>
   </div>
 </template>

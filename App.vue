@@ -11,6 +11,7 @@ import Erros from './Erros.vue';
 import Diario from './Diario.vue';
 import Plano from './Plano.vue';
 import Relatorio from './Relatorio.vue';
+import Exercicios from './Exercicios.vue';
 
 // --- Lógica de Autenticação ---
 const SENHA_CORRETA = 'petro2026'; // Defina sua senha aqui!
@@ -33,6 +34,7 @@ const titulos = {
   diario: { t: 'Diário de Bordo', s: 'Seu checklist de hábitos diários' },
   relatorio: { t: 'Relatório', s: 'Análise de desempenho e produtividade' },
   plano: { t: 'Plano de Estudos', s: 'Documentos e cronogramas' },
+  exercicios: { t: 'Banco de Questões', s: 'Pratique com questões estilo Cesgranrio' },
 };
 
 const tituloView = computed(() => titulos[view.value]?.t || 'Dashboard');
@@ -86,6 +88,7 @@ const views = {
   diario: Diario,
   relatorio: Relatorio,
   plano: Plano,
+  exercicios: Exercicios,
 };
 
 const navLinks = [
@@ -97,6 +100,7 @@ const navLinks = [
   { view: 'erros', icon: '📕', text: 'Erros' },
   { view: 'diario', icon: '📌', text: 'Diário' },
   { view: 'relatorio', icon: '📊', text: 'Relatório' },
+  { view: 'exercicios', icon: '📝', text: 'Questões' },
 ];
 
 const planoLink = { view: 'plano', icon: '📖', text: 'Plano de Estudos' };
