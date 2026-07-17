@@ -1,7 +1,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 
-import Dashboard from './Dashboard.vue';
+import Login from './Login.vue'; // 1. Importamos o novo componente
+import Dashboard from './Dashboard.vue'; // (demais imports continuam aqui)
 import Checklist from './Checklist.vue';
 import Horas from './Horas.vue';
 import Ciclo from './Ciclo.vue';
@@ -11,10 +12,16 @@ import Diario from './Diario.vue';
 import Plano from './Plano.vue';
 import Relatorio from './Relatorio.vue';
 
+// --- Lógica de Autenticação ---
+const SENHA_CORRETA = 'petro2026'; // Defina sua senha aqui!
+const autenticado = ref(sessionStorage.getItem('petro_auth') === 'true');
+const erroLogin = ref(false);
+// --- Fim da Lógica de Autenticação ---
+
 const carregando = ref(true);
 const menuAberta = ref(false);
 const view = ref('dashboard');
-const tema = ref(localStorage.getItem('petrobras_quimica_tema') || 'dark');
+const tema = ref(localStorage.getItem('petro_tema') || 'dark');
 
 const titulos = {
   dashboard: { t: 'Dashboard', s: 'Visão geral do seu progresso' },
@@ -41,12 +48,23 @@ function irPara(novaView) {
 function alternarTema() {
   tema.value = tema.value === 'dark' ? 'light' : 'dark';
   document.documentElement.dataset.tema = tema.value;
-  localStorage.setItem('petrobras_quimica_tema', tema.value);
+  localStorage.setItem('petro_tema', tema.value);
 }
 
 function navegarHash() {
   const hash = window.location.hash.slice(1);
   if (hash && views[hash]) view.value = hash;
+}
+
+function handleLogin(senhaDigitada) {
+  if (senhaDigitada === SENHA_CORRETA) {
+    autenticado.value = true;
+    erroLogin.value = false;
+    sessionStorage.setItem('petro_auth', 'true'); // Salva o estado na sessão
+  } else {
+    erroLogin.value = true;
+    senhaDigitada = ''; // Limpa o campo (indireto)
+  }
 }
 
 onMounted(() => {
@@ -85,7 +103,9 @@ const planoLink = { view: 'plano', icon: '📖', text: 'Plano de Estudos' };
 </script>
 
 <template>
-  <div v-if="carregando" class="loading-screen">
+  <Login v-if="!autenticado" :erro="erroLogin" @tentativa-login="handleLogin" />
+
+  <div v-else-if="carregando" class="loading-screen">
     Carregando...
   </div>
   <template v-else>
