@@ -9,21 +9,58 @@
 </head>
 <body>
   <div id="app">
-    <div v-if="!autenticado" class="login-container" style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;">
-      <div style="width:100%;max-width:380px;padding:32px;background:var(--fundo-sec);border-radius:8px;border:1px solid var(--borda);text-align:center;">
-        <div style="margin-bottom:20px;">
-          <h1 style="font-size:24px;color:var(--texto);margin:0;">Petrobras 2026</h1>
-          <span style="font-size:14px;color:var(--texto-sec);">Técnico em Química • Cesgranrio</span>
+    <div v-if="!autenticado" class="login-wrapper">
+      <div class="login-bg">
+        <div class="bg-shape bg-shape-1"></div>
+        <div class="bg-shape bg-shape-2"></div>
+        <div class="bg-shape bg-shape-3"></div>
+      </div>
+      <div class="login-container">
+        <div class="login-brand">
+          <div class="brand-icon">📘</div>
+          <h1 class="brand-title">Petrobras 2026</h1>
+          <p class="brand-subtitle">Técnico em Química • Cesgranrio</p>
+          <div class="brand-features">
+            <div class="feature-item">
+              <span class="feature-icon">🎯</span>
+              <span>Plano de estudos inteligente</span>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">🧠</span>
+              <span>Flashcards com revisão espaçada</span>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">📊</span>
+              <span>Métricas e relatórios de progresso</span>
+            </div>
+          </div>
         </div>
-        <p style="color:var(--texto-sec);margin-bottom:24px;font-size:14px;">Informe usuário e senha para acessar.</p>
-        <form @submit.prevent="handleLogin(loginUsuario, loginSenha)">
-          <input v-model="loginUsuario" type="text" placeholder="Usuário" autofocus autocomplete="username"
-            style="width:100%;padding:12px;border-radius:4px;border:1px solid var(--borda);background:var(--fundo);color:var(--texto);font-size:16px;margin-bottom:16px;box-sizing:border-box;">
-          <input v-model="loginSenha" type="password" placeholder="Senha" autocomplete="current-password"
-            style="width:100%;padding:12px;border-radius:4px;border:1px solid var(--borda);background:var(--fundo);color:var(--texto);font-size:16px;margin-bottom:16px;box-sizing:border-box;">
-          <button type="submit" style="width:100%;padding:12px;border:none;border-radius:4px;background:var(--primaria);color:white;font-size:16px;font-weight:600;cursor:pointer;">Entrar</button>
-          <p v-if="erroLogin" style="color:#ef4444;font-size:13px;margin-top:12px;">Usuário ou senha inválidos.</p>
-        </form>
+        <div class="login-card">
+          <div class="login-card-header">
+            <h2>Acessar Plataforma</h2>
+            <p>Informe suas credenciais</p>
+          </div>
+          <form @submit.prevent="handleLogin(loginUsuario, loginSenha)" class="login-form">
+            <div class="input-group">
+              <label for="loginUsuario">Usuário</label>
+              <input id="loginUsuario" v-model="loginUsuario" type="text" placeholder="Seu nome de usuário" class="input-field" autofocus autocomplete="username">
+              <span class="input-icon">👤</span>
+            </div>
+            <div class="input-group">
+              <label for="loginSenha">Senha</label>
+              <input id="loginSenha" v-model="loginSenha" type="password" placeholder="Sua senha" class="input-field" autocomplete="current-password">
+              <span class="input-icon">🔒</span>
+            </div>
+            <button type="submit" class="btn-entrar">
+              <span>Entrar</span>
+              <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+            <p v-if="erroLogin" class="msg-erro">⚠ Usuário ou senha inválidos. Tente novamente.</p>
+          </form>
+          <div class="login-card-footer">
+            <p>Conta de demonstração: <strong>estudante</strong> / <strong>petro2026</strong></p>
+          </div>
+        </div>
       </div>
     </div>
     <template v-if="autenticado">
@@ -731,40 +768,51 @@
 
 <!-- FLASHCARDS -->
 <template v-if="view === 'flashcards'">
-  <div v-if="modoRevisao">
+  <div v-if="modoRevisao" class="revisao-mode">
     <div class="grade-cartoes">
       <div class="cartao-stat azul">
         <div class="valor">{{ progressoRevisao }}%</div>
         <div class="rotulo">Progresso da revisão</div>
       </div>
-      <div class="cartao-stat" style="font-size:14px;">
-        <div class="valor" style="font-size:20px;">{{ deckRevisao.length - cardAtualIndex }} / {{ deckRevisao.length }}</div>
+      <div class="cartao-stat">
+        <div class="valor" style="font-size:20px;">{{ deckRevisao.length - (cardAtual ? deckRevisao.indexOf(cardAtual) : 0) }} / {{ deckRevisao.length }}</div>
         <div class="rotulo">Restantes</div>
       </div>
     </div>
-    <div class="card" v-if="cardAtual">
-      <div class="card-titulo" style="font-size:13px;color:var(--texto-sec);">
-        {{ cardAtual.materia }}
-      </div>
-      <div style="padding:24px;text-align:center;font-size:18px;min-height:120px;display:flex;align-items:center;justify-content:center;">
-        <div v-if="!cardAtual.virado" @click="cardAtual.virado = true" style="cursor:pointer;width:100%;">
-          {{ cardAtual.frente }}
-        </div>
-        <div v-else style="width:100%;">
-          <div style="margin-bottom:16px;">{{ cardAtual.verso }}</div>
-          <div style="display:flex;gap:8px;justify-content:center;">
-            <button @click="marcarResultado(true)" style="background:var(--sucesso);color:#fff;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:15px;">✔ Acertei</button>
-            <button @click="marcarResultado(false)" style="background:var(--erro);color:#fff;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:15px;">✘ Errei</button>
+
+    <div class="flashcard-review" v-if="cardAtual">
+      <div class="flashcard-materia">{{ cardAtual.materia }}</div>
+      <div class="flashcard-card" :class="{ virado: cardAtual.virado }" @click="!cardAtual.virado && (cardAtual.virado = true)">
+        <div class="flashcard-inner">
+          <div class="flashcard-front">
+            <div class="flashcard-label">PERGUNTA</div>
+            <div class="flashcard-text">{{ cardAtual.frente }}</div>
+            <div class="flashcard-hint">Clique para ver a resposta</div>
+          </div>
+          <div class="flashcard-back">
+            <div class="flashcard-label">RESPOSTA</div>
+            <div class="flashcard-text">{{ cardAtual.verso }}</div>
           </div>
         </div>
       </div>
-      <div style="text-align:center;padding:8px;font-size:12px;color:var(--texto-sec);">
-        <span v-if="!cardAtual.virado">Clique no card para virar</span>
-        <span v-else>Como foi sua resposta?</span>
+
+      <div v-if="cardAtual.virado" class="flashcard-actions">
+        <p class="flashcard-ask">Como foi sua resposta?</p>
+        <div class="flashcard-buttons">
+          <button class="btn-acertou" @click="marcarResultado(true)">
+            <span class="btn-icon">✓</span>
+            <span class="btn-label">Acertei</span>
+          </button>
+          <button class="btn-errei" @click="marcarResultado(false)">
+            <span class="btn-icon">✕</span>
+            <span class="btn-label">Errei</span>
+          </button>
+        </div>
       </div>
     </div>
-    <div style="margin-top:12px;text-align:center;">
-      <button @click="finalizarRevisao" style="background:none;border:1px solid var(--erro);color:var(--erro);padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;">Encerrar revisão</button>
+
+    <div class="revisao-footer">
+      <button class="btn-encerrar" @click="finalizarRevisao">Encerrar revisão</button>
     </div>
   </div>
 
@@ -774,87 +822,95 @@
         <div class="valor">{{ flashcards.length }}</div>
         <div class="rotulo">Total de flashcards</div>
       </div>
-      <div class="cartao-stat">
-        <div class="valor" style="font-size:20px;">{{ Object.values(flashcardsAgrupados).reduce((a, b) => a + b.length, 0) }}</div>
-        <div class="rotulo">Cards agrupados</div>
+      <div class="cartao-stat" style="border-top-color:#f59e0b;">
+        <div class="valor" style="color:#f59e0b;">{{ flashcards.filter(f => !f.lastReviewed || new Date() >= new Date(new Date(f.lastReviewed).getTime() + ({1:1,2:3,3:7,4:14,5:30}[f.box||1]||1)*86400000)).length }}</div>
+        <div class="rotulo">Pendentes de revisão</div>
+      </div>
+      <div class="cartao-stat verde" v-if="flashcards.length > 0">
+        <div class="valor">{{ Math.round((flashcards.length - flashcards.filter(f => !f.lastReviewed || new Date() >= new Date(new Date(f.lastReviewed).getTime() + ({1:1,2:3,3:7,4:14,5:30}[f.box||1]||1)*86400000)).length) / flashcards.length * 100) }}%</div>
+        <div class="rotulo">Dominados</div>
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" v-if="editandoFlashcard">
       <div class="card-titulo">
-        <span v-if="editandoFlashcard">{{ editandoFlashcard.id ? 'Editar Flashcard' : 'Novo Flashcard' }}</span>
-        <span v-else>Flashcards</span>
+        <span>{{ editandoFlashcard.id ? '✏️ Editar Flashcard' : '➕ Novo Flashcard' }}</span>
       </div>
-
-      <div v-if="editandoFlashcard" class="form-simulado">
-        <div>
+      <div class="form-grid">
+        <div class="form-group">
           <label>Matéria</label>
-          <select v-model="editandoFlashcard.materia" style="width:100%;padding:8px 10px;border:1px solid var(--borda);border-radius:6px;font-size:14px;font-family:inherit;background:var(--card);color:var(--texto);">
+          <select v-model="editandoFlashcard.materia">
             <option value="">Selecione...</option>
             <option>Português</option>
             <option>Matemática</option>
             <option>Química</option>
           </select>
         </div>
-        <div>
+        <div class="form-group full-width">
           <label>Frente (pergunta)</label>
-          <textarea v-model="editandoFlashcard.frente" placeholder="Ex: O que é pH?" rows="3" style="width:100%;padding:8px 10px;border:1px solid var(--borda);border-radius:6px;font-size:14px;font-family:inherit;background:var(--card);color:var(--texto);resize:vertical;"></textarea>
+          <textarea v-model="editandoFlashcard.frente" placeholder="Ex: O que é pH?" rows="3"></textarea>
         </div>
-        <div>
+        <div class="form-group full-width">
           <label>Verso (resposta)</label>
-          <textarea v-model="editandoFlashcard.verso" placeholder="Ex: Potencial hidrogeniônico..." rows="3" style="width:100%;padding:8px 10px;border:1px solid var(--borda);border-radius:6px;font-size:14px;font-family:inherit;background:var(--card);color:var(--texto);resize:vertical;"></textarea>
+          <textarea v-model="editandoFlashcard.verso" placeholder="Ex: Potencial hidrogeniônico..." rows="3"></textarea>
         </div>
-        <div style="display:flex;gap:8px;">
-          <button @click="salvarFlashcard" style="flex:1;">Salvar</button>
-          <button @click="cancelarFlashcard" style="flex:1;background:var(--texto-sec);">Cancelar</button>
+        <div class="form-actions">
+          <button class="btn-primary" @click="salvarFlashcard">💾 Salvar</button>
+          <button class="btn-secondary" @click="cancelarFlashcard">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" v-else>
+      <div class="card-titulo">
+        <span>📚 Flashcards</span>
+        <span class="card-count">{{ flashcards.length }} cards</span>
+      </div>
+
+      <div class="flashcard-toolbar">
+        <button class="btn-primary" @click="novoFlashcard">➕ Novo Flashcard</button>
+        <button class="btn-revisar" @click="abrirConfiguracaoRevisao" :disabled="flashcards.length === 0">▶ Iniciar Revisão</button>
+      </div>
+
+      <div v-if="configurandoRevisao" class="config-revisao">
+        <h4>Configurar Revisão</h4>
+        <div class="config-row">
+          <label>Matérias (deixe vazio para todas)</label>
+          <div class="config-checkboxes">
+            <label v-for="m in ['Português', 'Matemática', 'Química']" :key="m" class="config-check">
+              <input type="checkbox" :value="m" v-model="opcoesRevisao.materias"> {{ m }}
+            </label>
+          </div>
+        </div>
+        <div class="config-row">
+          <label>Número de cards</label>
+          <input type="number" v-model.number="opcoesRevisao.numCards" min="1" max="100" class="config-input">
+        </div>
+        <div class="config-row">
+          <label class="config-check">
+            <input type="checkbox" v-model="opcoesRevisao.aleatorio"> Aleatório
+          </label>
+        </div>
+        <div class="config-actions">
+          <button class="btn-primary" @click="iniciarRevisao">Iniciar</button>
+          <button class="btn-secondary" @click="cancelarConfiguracaoRevisao">Cancelar</button>
         </div>
       </div>
 
-      <div v-else>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
-          <button @click="novoFlashcard" style="padding:8px 20px;background:var(--primaria);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit;">+ Novo Flashcard</button>
-          <button @click="abrirConfiguracaoRevisao" style="padding:8px 20px;background:#6366f1;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit;">▶ Iniciar Revisão</button>
-        </div>
-
-        <div v-if="configurandoRevisao" style="padding:16px;background:var(--bg);border-radius:8px;margin-bottom:16px;">
-          <h4 style="margin:0 0 12px;font-size:14px;">Configurar Revisão</h4>
-          <div style="margin-bottom:12px;">
-            <label style="font-size:13px;display:block;margin-bottom:4px;">Matérias (deixe vazio para todas)</label>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <label v-for="m in ['Português', 'Matemática', 'Química']" :key="m" style="font-size:13px;display:flex;align-items:center;gap:4px;cursor:pointer;">
-                <input type="checkbox" :value="m" v-model="opcoesRevisao.materias"> {{ m }}
-              </label>
+      <div v-for="(cards, materia) in flashcardsAgrupados" :key="materia" class="materia-group">
+        <h4 class="materia-header">{{ materia }} <span class="materia-count">{{ cards.length }}</span></h4>
+        <div v-if="cards.length === 0" class="empty-state">Nenhum flashcard nesta matéria.</div>
+        <div v-for="card in cards" :key="card.id" class="flashcard-item">
+          <div class="flashcard-item-content">
+            <div class="flashcard-item-front">{{ card.frente }}</div>
+            <div class="flashcard-item-meta">
+              <span class="box-indicator" :class="'box-' + (card.box || 1)">Caixa {{ card.box || 1 }}</span>
+              <span class="review-info">Última revisão: {{ card.lastReviewed || 'Nunca' }}</span>
             </div>
           </div>
-          <div style="margin-bottom:12px;">
-            <label style="font-size:13px;display:block;margin-bottom:4px;">Número de cards</label>
-            <input type="number" v-model.number="opcoesRevisao.numCards" min="1" max="100" style="width:80px;padding:6px 10px;border:1px solid var(--borda);border-radius:6px;font-size:14px;font-family:inherit;background:var(--card);color:var(--texto);">
-          </div>
-          <div style="margin-bottom:12px;">
-            <label style="font-size:13px;display:flex;align-items:center;gap:4px;cursor:pointer;">
-              <input type="checkbox" v-model="opcoesRevisao.aleatorio"> Aleatório
-            </label>
-          </div>
-          <div style="display:flex;gap:8px;">
-            <button @click="iniciarRevisao" style="background:var(--primaria);color:#fff;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:14px;">Iniciar</button>
-            <button @click="cancelarConfiguracaoRevisao" style="background:var(--texto-sec);color:#fff;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:14px;">Cancelar</button>
-          </div>
-        </div>
-
-        <div v-for="(cards, materia) in flashcardsAgrupados" :key="materia" style="margin-bottom:20px;">
-          <h4 style="font-size:14px;margin-bottom:8px;color:var(--texto-sec);text-transform:uppercase;">{{ materia }} ({{ cards.length }})</h4>
-          <div v-if="cards.length === 0" style="font-size:13px;color:var(--texto-sec);padding:8px 0;">Nenhum flashcard.</div>
-          <div v-for="card in cards" :key="card.id" style="padding:12px;border:1px solid var(--borda);border-radius:8px;margin-bottom:8px;font-size:14px;">
-            <div style="display:flex;justify-content:space-between;align-items:start;gap:8px;">
-              <div style="flex:1;">
-                <strong>{{ card.frente }}</strong>
-                <div style="margin-top:4px;font-size:13px;color:var(--texto-sec);">📌 Caixa {{ card.box || 1 }} · Última revisão: {{ card.lastReviewed || 'Nunca' }}</div>
-              </div>
-              <div style="display:flex;gap:4px;flex-shrink:0;">
-                <button @click="editarFlashcard(card)" title="Editar">✏️</button>
-                <button @click="removerFlashcard(card.id)" title="Remover">✕</button>
-              </div>
-            </div>
+          <div class="flashcard-item-actions">
+            <button class="btn-icon-only" @click="editarFlashcard(card)" title="Editar">✏️</button>
+            <button class="btn-icon-only btn-danger" @click="removerFlashcard(card.id)" title="Remover">✕</button>
           </div>
         </div>
       </div>
@@ -880,7 +936,7 @@
       </div>
     </div>
 
-    <div v-if="!revisao" class="card" style="text-align:center;padding:30px;">
+    <div class="card" style="text-align:center;padding:30px;">
       <div style="font-size:48px;margin-bottom:12px;">{{ quizAcertos/quizTotal >= 0.7 ? '🎉' : quizAcertos/quizTotal >= 0.5 ? '💪' : '📚' }}</div>
       <div style="font-size:18px;font-weight:600;margin-bottom:8px;">
         {{ quizAcertos/quizTotal >= 0.7 ? 'Ótimo desempenho!' : quizAcertos/quizTotal >= 0.5 ? 'Continue praticando!' : 'Estude mais e tente novamente!' }}
@@ -888,12 +944,17 @@
       <div style="font-size:14px;color:var(--texto-sec);margin-bottom:16px;">
         Você acertou {{ quizAcertos }} de {{ quizTotal }} questões ({{ quizTotal > 0 ? Math.round(quizAcertos/quizTotal*100) : 0 }}%)
       </div>
-      <button @click="iniciarQuiz" style="padding:10px 24px;background:var(--primaria);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px;font-family:inherit;">
-        🔄 Novo Quiz
-      </button>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+        <button @click="iniciarQuiz" style="padding:10px 24px;background:var(--primaria);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px;font-family:inherit;">
+          🔄 Novo Quiz
+        </button>
+        <button @click="toggleRevisao" style="padding:10px 24px;background:var(--bg);color:var(--texto);border:1px solid var(--borda);border-radius:8px;cursor:pointer;font-size:15px;font-family:inherit;">
+          ← Voltar para lista
+        </button>
+      </div>
     </div>
 
-    <div v-if="revisao" class="card">
+    <div class="card">
       <div class="card-titulo">Revisão por Questão</div>
       <div v-for="(q, i) in quizQuestoes" :key="q.id" style="padding:14px;border:1px solid var(--borda);border-radius:8px;margin-bottom:10px;font-size:14px;"
         :style="{ borderLeft: '4px solid ' + (respostas[i] === q.correta ? 'var(--sucesso)' : 'var(--erro)') }">
@@ -912,9 +973,9 @@
           </button>
         </div>
       </div>
-      <button @click="iniciarQuiz" style="padding:10px 24px;background:var(--primaria);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-family:inherit;margin-top:8px;">
-        🔄 Novo Quiz
-      </button>
+      <div style="text-align:center;margin-top:16px;">
+        <button @click="toggleRevisao" style="padding:10px 24px;background:var(--primaria);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-family:inherit;font-weight:500;">← Voltar para exercícios</button>
+      </div>
     </div>
   </div>
 

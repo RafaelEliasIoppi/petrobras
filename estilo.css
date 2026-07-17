@@ -144,6 +144,8 @@ body {
 .cartao-stat .valor { font-size: 36px; font-weight: 700; color: var(--primaria); }
 .cartao-stat .rotulo { font-size: 13px; color: var(--texto-sec); margin-top: 4px; }
 
+.cartao-stat.azul { border-top-color: #6366f1; }
+.cartao-stat.azul .valor { color: #6366f1; }
 .cartao-stat.verde { border-top-color: var(--sucesso); }
 .cartao-stat.verde .valor { color: var(--sucesso); }
 .cartao-stat.laranja { border-top-color: var(--aviso); }
