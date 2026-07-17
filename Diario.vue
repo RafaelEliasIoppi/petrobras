@@ -2,7 +2,7 @@
 import { useDiario } from './useDiario.js';
 import { useCiclo } from './useCiclo.js';
 import { useHoras } from './useHoras.js';
-import { CONTEUDOS } from './dados.js';
+import { CONTEUDOS, CICLO_MAP, mapCicloParaMateriaId } from './dados.js';
 import { ref } from 'vue';
 
 const {
@@ -34,19 +34,8 @@ function adicionarNovaMateria() {
   }
 }
 
-const CICLO_MAP = {
-  'português': 'portugues',
-  'matemática': 'matematica',
-  'química': 'quimica',
-  'petróleo': 'processospetroleo',
-  'segurança': 'segurancaaambiente',
-  'metrologia': 'metrologiacontrole'
-};
-
 function estudarCiclo(incremento) {
-  const nome = materiaAtual.value.materia.toLowerCase().normalize('NFD').replace(/[\u0300-\u0300]/g, '');
-  const match = Object.keys(CICLO_MAP).find(k => nome.includes(k));
-  const id = CICLO_MAP[match] || 'quimica';
+  const id = mapCicloParaMateriaId(materiaAtual.value.materia);
   adicionarHoras(hoje, id, incremento);
 }
 

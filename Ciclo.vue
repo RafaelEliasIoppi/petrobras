@@ -3,7 +3,8 @@ import { useCiclo } from './useCiclo.js';
 
 const {
   materiaAtual, cicloCompleto, cicloExpandido, ciclo,
-  CICLO_ESTUDOS, avancarCiclo, reiniciarCiclo
+  CICLO_ESTUDOS, idxOriginalAtual, completosPorItem, totalPonderado,
+  avancarCiclo, reiniciarCiclo
 } = useCiclo();
 </script>
 
@@ -27,6 +28,9 @@ const {
     <div class="card">
       <div class="card-titulo">
         <span>Sequência do Ciclo</span>
+        <span style="font-size:13px;color:var(--texto-sec);font-weight:400;">
+          ({{ ciclo.posicao + 1 }} de {{ totalPonderado }}) ponderado por peso
+        </span>
         <button @click="cicloExpandido = !cicloExpandido" style="background:none;border:1px solid var(--borda);border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px;">
           {{ cicloExpandido ? 'Recolher' : 'Expandir' }}
         </button>
@@ -35,13 +39,13 @@ const {
         <div v-for="(m, i) in CICLO_ESTUDOS" :key="i"
           style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;font-size:13px;cursor:default;"
           :style="{
-            background: i === ciclo.posicao ? '#8b5cf6' : ciclo.concluido[m.materia+'-c'+i] ? '#10b981' : 'var(--bg)',
-            color: i === ciclo.posicao ? '#fff' : ciclo.concluido[m.materia+'-c'+i] ? '#fff' : 'var(--texto)',
-            border: '1px solid ' + (i === ciclo.posicao ? '#8b5cf6' : 'var(--borda)')
+            background: i === idxOriginalAtual ? '#8b5cf6' : completosPorItem[i] > 0 ? '#10b981' : 'var(--bg)',
+            color: i === idxOriginalAtual || completosPorItem[i] > 0 ? '#fff' : 'var(--texto)',
+            border: '1px solid ' + (i === idxOriginalAtual ? '#8b5cf6' : 'var(--borda)')
           }">
           <span>{{ m.icone }}</span>
           <span>{{ m.materia }}</span>
-          <span style="opacity:0.7;font-size:12px;">{{ m.tempo }}min</span>
+          <span style="opacity:0.7;font-size:12px;">{{ completosPorItem[i] }}/{{ m.peso }}</span>
         </div>
       </div>
       <div style="display:flex;gap:12px;flex-wrap:wrap;">

@@ -7,7 +7,8 @@ import { useDiario } from './useDiario.js';
 import { useCiclo } from './useCiclo.js';
 import {
   CONTEUDOS, CICLO_ESTUDOS, SEMANAS_PLANO,
-  META_HORAS_SEMANA, META_HORAS_DIA
+  META_HORAS_SEMANA, META_HORAS_DIA,
+  mapCicloParaMateriaId
 } from './dados.js';
 
 export function useRelatorio() {
@@ -95,17 +96,18 @@ export function useRelatorio() {
 
   const cicloDetalhado = computed(() => {
     return CICLO_ESTUDOS.map((item, idx) => {
-      const chave = `${item.materia}-c${idx}`;
-      const concluida = !!ciclo.ciclo.value.concluido[chave];
+      const concluida = (ciclo.ciclo.value.concluido[`item-${idx}`] || 0) > 0;
+      const materiaId = mapCicloParaMateriaId(item.materia);
       let horasEstudadas = 0;
       for (let s = 1; s <= SEMANAS_PLANO; s++) {
-        horasEstudadas += horas.totalMateriaSemana(s, 'quimica');
+        horasEstudadas += horas.totalMateriaSemana(s, materiaId);
       }
       return {
         materia: item.materia,
         icone: item.icone,
         tempo: item.tempo,
         concluida,
+        horasEstudadas: Math.round(horasEstudadas * 10) / 10,
         idx
       };
     });

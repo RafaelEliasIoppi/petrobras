@@ -640,6 +640,22 @@ export const CICLO_ESTUDOS = [
   { materia: 'Química — Transformações + Estequiometria', icone: '🧪', tempo: 80, peso: 3 }
 ];
 
+// Mapeia nome do ciclo para ID de CONTEUDOS (mesmo usado em Diario.vue)
+export const CICLO_MAP = {
+  'português': 'portugues',
+  'matemática': 'matematica',
+  'química': 'quimica',
+  'petróleo': 'processospetroleo',
+  'segurança': 'segurancaaambiente',
+  'metrologia': 'metrologiacontrole'
+};
+
+export function mapCicloParaMateriaId(nomeMateria) {
+  const nome = nomeMateria.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const match = Object.keys(CICLO_MAP).find(k => nome.includes(k));
+  return CICLO_MAP[match] || 'quimica';
+}
+
 export const DIAS_SEMANA = [
   { valor: 'seg', rotulo: 'Segunda' },
   { valor: 'ter', rotulo: 'Terça' },

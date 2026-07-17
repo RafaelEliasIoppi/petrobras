@@ -151,36 +151,60 @@ function useCiclo(cicloEstudosData) {
   const ciclo = ref({ posicao: 0, concluido: {} });
   const cicloExpandido = ref(false);
 
-  const materiaAtual = computed(() => {
-    return cicloEstudosData[ciclo.value.posicao] || cicloEstudosData[0];
+  const cicloPonderado = computed(() => {
+    const arr = [];
+    cicloEstudosData.forEach((item, idx) => {
+      for (let w = 0; w < item.peso; w++) {
+        arr.push({ ...item, idxOriginal: idx });
+      }
+    });
+    return arr;
   });
 
+  const totalPonderado = computed(() => cicloPonderado.value.length);
+
+  const materiaAtual = computed(() => {
+    const pond = cicloPonderado.value;
+    if (pond.length === 0) return cicloEstudosData[0] || {};
+    return pond[ciclo.value.posicao] || pond[0];
+  });
+
+  const idxOriginalAtual = computed(() => materiaAtual.value.idxOriginal ?? 0);
+
   const cicloCompleto = computed(() => {
-    const total = cicloEstudosData.length;
+    const total = totalPonderado.value;
     if (total === 0) return 0;
-    const concluidos = Object.keys(ciclo.value.concluido || {}).length;
-    return Math.round(concluidos / total * 100);
+    const totalCompletions = Object.values(ciclo.value.concluido || {}).reduce((a, b) => a + b, 0);
+    return Math.min(100, Math.round(totalCompletions / total * 100));
+  });
+
+  const completosPorItem = computed(() => {
+    const map = {};
+    cicloEstudosData.forEach((_, i) => {
+      map[i] = ciclo.value.concluido[`item-${i}`] || 0;
+    });
+    return map;
   });
 
   async function avancarCiclo() {
-    const novoCiclo = { ...ciclo.value };
-    const materia = cicloEstudosData[novoCiclo.posicao];
-    const chave = `${materia.materia}-c${novoCiclo.posicao}`;
-    novoCiclo.concluido = { ...(novoCiclo.concluido || {}), [chave]: true };
-    novoCiclo.posicao = (novoCiclo.posicao + 1) % cicloEstudosData.length;
-    
-    ciclo.value = novoCiclo; // Atualização reativa imediata
+    const item = cicloPonderado.value[ciclo.value.posicao];
+    const novoCiclo = { ...ciclo.value, concluido: { ...(ciclo.value.concluido || {}) } };
+    const chave = `item-${item.idxOriginal}`;
+    novoCiclo.concluido[chave] = (novoCiclo.concluido[chave] || 0) + 1;
+    novoCiclo.posicao = (ciclo.value.posicao + 1) % totalPonderado.value;
+    ciclo.value = novoCiclo;
     await Armazenamento.salvarCiclo(novoCiclo);
   }
 
   async function reiniciarCiclo() {
     const novoCiclo = { posicao: 0, concluido: {} };
-    ciclo.value = novoCiclo; // Atualização reativa imediata
+    ciclo.value = novoCiclo;
     await Armazenamento.salvarCiclo(novoCiclo);
   }
 
   return {
-    ciclo, cicloExpandido, materiaAtual, cicloCompleto, avancarCiclo, reiniciarCiclo
+    ciclo, cicloExpandido, materiaAtual, idxOriginalAtual,
+    cicloCompleto, completosPorItem, avancarCiclo, reiniciarCiclo
   };
 }
 
@@ -680,7 +704,7 @@ const app = createApp({
     const { erros, formErro, editandoErro, errosAgrupados, totalErros, carregandoErros, novoErro, salvarErro, editarErro, removerErro, cancelarErro, carregarErros } = useErros();
 
     // --- Usando o Composable para a feature de Ciclo de Estudos ---
-    const { ciclo, cicloExpandido, materiaAtual, cicloCompleto, avancarCiclo, reiniciarCiclo } = useCiclo(CICLO_ESTUDOS);
+    const { ciclo, cicloExpandido, materiaAtual, idxOriginalAtual, cicloCompleto, completosPorItem, avancarCiclo, reiniciarCiclo } = useCiclo(CICLO_ESTUDOS);
 
     // --- Usando o Composable para a feature de Diário de Estudos ---
     const CHECKLIST_ITENS = [
@@ -908,7 +932,7 @@ const app = createApp({
       modoRevisao, configurandoRevisao, deckRevisao, cardAtual, progressoRevisao, opcoesRevisao, 
       abrirConfiguracaoRevisao, iniciarRevisao, proximoCard, marcarResultado, finalizarRevisao, cancelarConfiguracaoRevisao,
       // Expondo tudo do Composable de Ciclo de Estudos
-      ciclo, materiaAtual, cicloCompleto, cicloExpandido,
+      ciclo, materiaAtual, idxOriginalAtual, cicloCompleto, cicloExpandido, completosPorItem,
       avancarCiclo, reiniciarCiclo,
       CICLO_ESTUDOS, REVISAO_INTERVALOS, DIAS_SEMANA,
       conteudosFiltrados, expandirTudo, colapsarTudo,
