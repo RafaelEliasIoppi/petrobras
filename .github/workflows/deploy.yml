@@ -24,6 +24,7 @@ jobs:
           cp -r petrobras-quimica-study-plan/site/* .
           cp -r petrobras-quimica-study-plan/planos .
           rm -rf petrobras-quimica-study-plan
+          find . -name '.gitignore' -type f -delete
 
       - uses: actions/configure-pages@v4
 

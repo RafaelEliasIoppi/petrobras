@@ -852,6 +852,24 @@ const app = createApp({
       { id: 'quadro-horas', nome: 'Quadro de Horas', grupo: 'Cronogramas e Planos' },
       { id: 'relatorio-metodos-concurseiros', nome: 'Relatório — Métodos de Concurseiros', grupo: 'Cronogramas e Planos' },
       { id: 'revisoes-simulados', nome: 'Revisões e Simulados', grupo: 'Cronogramas e Planos' },
+      { id: 'materias/portugues', nome: 'Português', grupo: 'Matérias' },
+      { id: 'materias/matematica', nome: 'Matemática', grupo: 'Matérias' },
+      { id: 'materias/quimica-geral', nome: 'Química Geral', grupo: 'Matérias' },
+      { id: 'materias/quimica-analitica', nome: 'Química Analítica', grupo: 'Matérias' },
+      { id: 'materias/quimica-organica', nome: 'Química Orgânica', grupo: 'Matérias' },
+      { id: 'materias/fisico-quimica', nome: 'Físico-Química', grupo: 'Matérias' },
+      { id: 'materias/analise-instrumental', nome: 'Análise Instrumental', grupo: 'Matérias' },
+      { id: 'materias/metrologia-estatistica', nome: 'Metrologia e Estatística', grupo: 'Matérias' },
+      { id: 'resumos/analise-geral', nome: 'Análise Geral', grupo: 'Resumos' },
+      { id: 'resumos/portugues', nome: 'Português', grupo: 'Resumos' },
+      { id: 'resumos/matematica', nome: 'Matemática', grupo: 'Resumos' },
+      { id: 'resumos/quimica-geral', nome: 'Química Geral', grupo: 'Resumos' },
+      { id: 'resumos/quimica-organica', nome: 'Química Orgânica', grupo: 'Resumos' },
+      { id: 'resumos/fisico-quimica', nome: 'Físico-Química', grupo: 'Resumos' },
+      { id: 'resumos/tecnicas-laboratorio', nome: 'Técnicas de Laboratório', grupo: 'Resumos' },
+      { id: 'simulados/simulado-01', nome: 'Simulado 01', grupo: 'Simulados' },
+      { id: 'simulados/simulado-02', nome: 'Simulado 02', grupo: 'Simulados' },
+      { id: 'simulados/simulado-03', nome: 'Simulado 03', grupo: 'Simulados' },
     ];
 
     const planoSelecionado = ref('');
@@ -873,11 +891,13 @@ const app = createApp({
       carregandoPlano.value = true;
       try {
         let md;
-        const r = await fetch(`/api/plano/${planoSelecionado.value}`);
+        const apiUrl = `/api/plano/${planoSelecionado.value}`;
+        const staticUrl = `/planos/${planoSelecionado.value}.md`;
+        const r = await fetch(apiUrl);
         if (r.ok) {
           md = await r.text();
         } else {
-          const r2 = await fetch(`/planos/${planoSelecionado.value}.md`);
+          const r2 = await fetch(staticUrl);
           if (!r2.ok) throw new Error('Não encontrado');
           md = await r2.text();
         }
