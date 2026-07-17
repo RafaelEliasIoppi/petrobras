@@ -216,6 +216,8 @@ onMounted(() => {
   perspective: 1000px;
   cursor: pointer;
   min-height: 260px;
+  max-width: 560px;
+  margin: 0 auto;
 }
 
 .flashcard-inner {
