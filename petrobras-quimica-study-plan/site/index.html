@@ -67,6 +67,9 @@
         <a href="#flashcards" class="nav-item" :class="{ ativa: view === 'flashcards' }" @click.prevent="irPara('flashcards')">
           <span class="icone">🧠</span> Flashcards
         </a>
+        <a v-if="usuarioAtual?.role === 'admin'" href="#admin" class="nav-item" :class="{ ativa: view === 'admin' }" @click.prevent="irPara('admin')" style="border-top:1px solid rgba(255,255,255,0.08);margin-top:8px;padding-top:12px;">
+          <span class="icone">⚙️</span> Admin
+        </a>
         <div style="border-top:1px solid rgba(255,255,255,0.08);margin:8px 16px;"></div>
         <a href="#plano" class="nav-item" :class="{ ativa: view === 'plano' }" @click.prevent="irPara('plano')">
           <span class="icone">📖</span> Plano de Estudos
@@ -1098,7 +1101,86 @@
     </div>
   </div>
 </template>
-        </div> 
+<template v-if="view === 'admin'">
+  <div class="grade-cartoes">
+    <div class="cartao-stat" style="border-top-color:#f59e0b;">
+      <div class="valor" style="color:#f59e0b;">{{ adminTotal }}</div>
+      <div class="rotulo">Usuários</div>
+    </div>
+    <div class="cartao-stat" style="border-top-color:#ef4444;">
+      <div class="valor" style="color:#ef4444;font-size:20px;">{{ adminAdmins.length }}</div>
+      <div class="rotulo">Administradores</div>
+    </div>
+    <div class="cartao-stat" style="border-top-color:#3b82f6;">
+      <div class="valor" style="color:#3b82f6;font-size:20px;">{{ adminComuns.length }}</div>
+      <div class="rotulo">Usuários</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-titulo">
+      <span>{{ adminEditando ? (adminEditando.usuario ? 'Editar Usuário' : 'Novo Usuário') : 'Usuários' }}</span>
+    </div>
+
+    <div v-if="adminEditando" class="form-simulado">
+      <div>
+        <label>Usuário</label>
+        <input v-model="adminEditando.usuario" placeholder="Nome de usuário" :disabled="!!adminEditando.usuario" style="width:100%;padding:8px 10px;border:1px solid var(--borda);border-radius:6px;font-size:14px;font-family:inherit;background:var(--card);color:var(--texto);">
+      </div>
+      <div>
+        <label>Nome completo</label>
+        <input v-model="adminEditando.nome" placeholder="Nome de exibição" style="width:100%;padding:8px 10px;border:1px solid var(--borda);border-radius:6px;font-size:14px;font-family:inherit;background:var(--card);color:var(--texto);">
+      </div>
+      <div>
+        <label>Senha</label>
+        <input v-model="adminEditando.senha" type="password" placeholder="Mínimo 3 caracteres" style="width:100%;padding:8px 10px;border:1px solid var(--borda);border-radius:6px;font-size:14px;font-family:inherit;background:var(--card);color:var(--texto);">
+      </div>
+      <div>
+        <label>Função</label>
+        <select v-model="adminEditando.role" style="width:100%;padding:8px 10px;border:1px solid var(--borda);border-radius:6px;font-size:14px;font-family:inherit;background:var(--card);color:var(--texto);">
+          <option value="user">Usuário</option>
+          <option value="admin">Administrador</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button @click="adminSalvar" style="flex:1;padding:8px 16px;background:var(--primaria);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;">Salvar</button>
+        <button @click="adminCancelar" style="flex:1;padding:8px 16px;background:var(--texto-sec);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;">Cancelar</button>
+      </div>
+    </div>
+
+    <div v-else>
+      <button @click="adminNovo" style="margin-bottom:16px;padding:8px 20px;background:var(--primaria);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit;">+ Novo Usuário</button>
+      <table class="tabela-simulados">
+        <thead>
+          <tr>
+            <th>Usuário</th>
+            <th>Nome</th>
+            <th>Função</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="u in adminUsuarios" :key="u.usuario">
+            <td><strong>{{ u.usuario }}</strong></td>
+            <td>{{ u.nome }}</td>
+            <td>
+              <span v-if="u.role === 'admin'" style="background:#f59e0b;color:#000;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;">ADMIN</span>
+              <span v-else style="color:var(--texto-sec);font-size:13px;">Usuário</span>
+            </td>
+            <td>
+              <button @click="adminEditar(u)" style="background:none;border:none;cursor:pointer;font-size:16px;padding:4px;" :disabled="u.usuario === usuarioAtual?.usuario" :style="u.usuario === usuarioAtual?.usuario ? {opacity:0.3} : {}">✏️</button>
+              <button @click="adminRemover(u.usuario)" style="background:none;border:none;cursor:pointer;font-size:16px;padding:4px;color:var(--erro);" :disabled="u.usuario === usuarioAtual?.usuario" :style="u.usuario === usuarioAtual?.usuario ? {opacity:0.3} : {}">✕</button>
+            </td>
+          </tr>
+          <tr v-if="adminUsuarios.length === 0">
+            <td colspan="4" style="padding:20px;color:var(--texto-sec);text-align:center;">Nenhum usuário cadastrado.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</template>
+  </div>
       </transition>
     </main>
 

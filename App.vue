@@ -12,6 +12,7 @@ import Diario from './Diario.vue';
 import Plano from './Plano.vue';
 import Relatorio from './Relatorio.vue';
 import Exercicios from './Exercicios.vue';
+import Admin from './Admin.vue';
 import { autenticar } from './usuarios.js';
 
 const usuarioAtual = ref(JSON.parse(sessionStorage.getItem('petro_usuario') || 'null'));
@@ -34,6 +35,7 @@ const titulos = {
   relatorio: { t: 'Relatório', s: 'Análise de desempenho e produtividade' },
   plano: { t: 'Plano de Estudos', s: 'Documentos e cronogramas' },
   exercicios: { t: 'Banco de Questões', s: 'Pratique com questões estilo Cesgranrio' },
+  admin: { t: 'Administração', s: 'Gerenciar usuários da plataforma' },
 };
 
 const tituloView = computed(() => titulos[view.value]?.t || 'Dashboard');
@@ -96,6 +98,7 @@ const views = {
   relatorio: Relatorio,
   plano: Plano,
   exercicios: Exercicios,
+  admin: Admin,
 };
 
 const navLinks = [
@@ -128,6 +131,9 @@ const planoLink = { view: 'plano', icon: '📖', text: 'Plano de Estudos' };
       <nav class="sidebar-nav">
         <a v-for="link in navLinks" :key="link.view" :href="`#${link.view}`" class="nav-item" :class="{ ativa: view === link.view }" @click.prevent="irPara(link.view)">
           <span class="icone">{{ link.icon }}</span> {{ link.text }}
+        </a>
+        <a v-if="usuarioAtual?.role === 'admin'" href="#admin" class="nav-item" :class="{ ativa: view === 'admin' }" @click.prevent="irPara('admin')" style="border-top:1px solid rgba(255,255,255,0.08);margin-top:8px;padding-top:12px;">
+          <span class="icone">⚙️</span> Admin
         </a>
         <div style="border-top:1px solid rgba(255,255,255,0.08);margin:8px 16px;"></div>
         <a :href="`#${planoLink.view}`" class="nav-item" :class="{ ativa: view === planoLink.view }" @click.prevent="irPara(planoLink.view)">
@@ -162,6 +168,7 @@ const planoLink = { view: 'plano', icon: '📖', text: 'Plano de Estudos' };
         <component
           :is="views[view]"
           :key="view"
+          :usuarioLogado="view === 'admin' ? usuarioAtual?.usuario : undefined"
         />
       </transition>
     </main>

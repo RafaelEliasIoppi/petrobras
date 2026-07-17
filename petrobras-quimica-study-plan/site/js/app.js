@@ -596,6 +596,60 @@ function useFlashcards() {
   return { flashcards, formFlashcard, editandoFlashcard, carregandoFlashcards, flashcardsAgrupados, carregarFlashcards, novoFlashcard, salvarFlashcard, editarFlashcard, removerFlashcard, cancelarFlashcard, modoRevisao, configurandoRevisao, deckRevisao, cardAtual, progressoRevisao, opcoesRevisao, abrirConfiguracaoRevisao, iniciarRevisao, proximoCard, marcarResultado, finalizarRevisao, cancelarConfiguracaoRevisao };
 }
 
+function useAdmin() {
+  const usuarios = ref([]);
+  const editandoUsuario = ref(null);
+
+  const totalUsuarios = computed(() => usuarios.value.length);
+  const admins = computed(() => usuarios.value.filter(u => u.role === 'admin'));
+  const usuariosComuns = computed(() => usuarios.value.filter(u => u.role !== 'admin'));
+
+  async function carregarAdmin() {
+    if (usuarios.value.length > 0) return;
+    usuarios.value = await Armazenamento.getAdminUsuarios();
+  }
+
+  function novoUsuario() {
+    editandoUsuario.value = { usuario: '', senha: '', nome: '', role: 'user' };
+  }
+
+  function editarUsuario(u) {
+    editandoUsuario.value = { ...u };
+  }
+
+  async function salvarUsuario() {
+    if (!editandoUsuario.value) return;
+    const u = editandoUsuario.value;
+    if (!u.usuario || !u.senha || u.senha.length < 3 || !u.nome) return;
+
+    const idx = usuarios.value.findIndex(x => x.usuario === u.usuario);
+    if (idx >= 0) {
+      usuarios.value.splice(idx, 1, { ...u });
+    } else {
+      usuarios.value.push({ ...u });
+    }
+    await Armazenamento.salvarAdminUsuarios([...usuarios.value]);
+    editandoUsuario.value = null;
+  }
+
+  async function removerUsuario(usuario) {
+    const idx = usuarios.value.findIndex(u => u.usuario === usuario);
+    if (idx >= 0) {
+      usuarios.value.splice(idx, 1);
+      await Armazenamento.salvarAdminUsuarios([...usuarios.value]);
+    }
+  }
+
+  function cancelarEdicao() {
+    editandoUsuario.value = null;
+  }
+
+  return {
+    usuarios, editandoUsuario, totalUsuarios, admins, usuariosComuns,
+    novoUsuario, editarUsuario, salvarUsuario, removerUsuario, cancelarEdicao, carregarAdmin
+  };
+}
+
 function useCronograma(cronogramaData) {
   const progresso = ref({});
   const carregado = ref(false);
@@ -1176,6 +1230,9 @@ const app = createApp({
     // --- Usando o Composable para a feature de Flashcards ---
     const { flashcards, formFlashcard, editandoFlashcard, carregandoFlashcards, flashcardsAgrupados, carregarFlashcards, novoFlashcard, salvarFlashcard, editarFlashcard, removerFlashcard, cancelarFlashcard, modoRevisao, configurandoRevisao, deckRevisao, cardAtual, progressoRevisao, opcoesRevisao, abrirConfiguracaoRevisao, iniciarRevisao, proximoCard, marcarResultado, finalizarRevisao, cancelarConfiguracaoRevisao } = useFlashcards();
 
+    // --- Usando o Composable para Admin ---
+    const admin = useAdmin();
+
     // --- Usando o Composable para a feature de Questões ---
     const exercicios = useExercicios();
 
@@ -1227,6 +1284,9 @@ const app = createApp({
       if (novaView === 'exercicios') {
         exercicios.carregarFavoritos();
       }
+      if (novaView === 'admin') {
+        admin.carregarAdmin();
+      }
     });
 
     const tituloView = computed(() => ({
@@ -1241,7 +1301,8 @@ const app = createApp({
       diario: 'Diário de Estudos',
       cronograma: 'Cronograma Semanal',
       exercicios: 'Banco de Questões',
-      plano: 'Plano de Estudos'
+      plano: 'Plano de Estudos',
+      admin: 'Administração'
     })[view.value]);
 
     const subtituloView = computed(() => ({
@@ -1255,7 +1316,8 @@ const app = createApp({
       diario: 'Checklist diário do concurseiro aprovado',
       cronograma: 'Cronograma detalhado semana a semana',
       exercicios: 'Pratique com questões estilo Cesgranrio',
-      plano: 'Consulte o cronograma e conteúdos programáticos'
+      plano: 'Consulte o cronograma e conteúdos programáticos',
+      admin: 'Gerenciar usuários da plataforma'
     })[view.value]);
 
     // --- Computeds Globais ---
@@ -1432,6 +1494,17 @@ const app = createApp({
       avancarCiclo, reiniciarCiclo,
       CICLO_ESTUDOS, REVISAO_INTERVALOS, DIAS_SEMANA,
       conteudosFiltrados, expandirTudo, colapsarTudo,
+      // Admin
+      adminUsuarios: admin.usuarios,
+      adminEditando: admin.editandoUsuario,
+      adminTotal: admin.totalUsuarios,
+      adminAdmins: admin.admins,
+      adminComuns: admin.usuariosComuns,
+      adminNovo: admin.novoUsuario,
+      adminEditar: admin.editarUsuario,
+      adminSalvar: admin.salvarUsuario,
+      adminRemover: admin.removerUsuario,
+      adminCancelar: admin.cancelarEdicao,
       // Cronograma
       periodos, cronSemana, cronograma, semanaAtualDias, materiaInfo, materiasList,
       slotConcluido, alternarSlot, totalSlots, totalConcluidos, progressoGeralCron,

@@ -275,6 +275,28 @@ const Armazenamento = {
     return this._putToServer('ciclo', ciclo);
   },
 
+  // --- Admin (Usuários) ---
+  async getAdminUsuarios() {
+    const server = await this._getFromServer('admin_usuarios');
+    const local = this._carregarLocal('admin_usuarios', null);
+    if (server && Array.isArray(server) && server.length > 0) {
+      this._salvarLocal('admin_usuarios', server);
+      return server;
+    }
+    if (local && Array.isArray(local) && local.length > 0) return local;
+    const padrao = [
+      { usuario: 'admin', senha: 'admin123', nome: 'Administrador', role: 'admin' },
+      { usuario: 'estudante', senha: 'petro2026', nome: 'Estudante', role: 'user' },
+    ];
+    this._salvarLocal('admin_usuarios', padrao);
+    return padrao;
+  },
+
+  async salvarAdminUsuarios(lista) {
+    this._salvarLocal('admin_usuarios', lista);
+    return this._putToServer('admin_usuarios', lista);
+  },
+
   // --- Config ---
   async getConfig() {
     const server = await this._getFromServer('config');
