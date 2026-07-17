@@ -690,9 +690,6 @@ const app = createApp({
     const carregando = ref(true);
     const tema = ref('light');
 
-    // --- Estado Global da Aplicação (agora controlado aqui) ---
-    const saveStatus = ref('idle');
-
     // --- Constantes e Dados Estáticos ---
     const semanasPlano = SEMANAS_PLANO;
     const metaHoras = META_HORAS_SEMANA;
@@ -741,13 +738,7 @@ const app = createApp({
       return h >= metaHoras ? 'verde' : h >= metaHoras * 0.5 ? 'laranja' : 'vermelho';
     });
 
-    const diasSemana = [
-      { valor: 'seg', rotulo: 'Segunda' },
-      { valor: 'ter', rotulo: 'Terça' },
-      { valor: 'qua', rotulo: 'Quarta' },
-      { valor: 'qui', rotulo: 'Quinta' },
-      { valor: 'sex', rotulo: 'Sexta' }
-    ];
+    const diasSemana = DIAS_SEMANA.filter(d => d.valor !== 'sab' && d.valor !== 'dom');
 
     // Inicialização assíncrona
     onMounted(async () => {
@@ -776,13 +767,6 @@ const app = createApp({
       if (novaView === 'flashcards') {
         carregarFlashcards();
       }
-    });
-
-    // Observador para sincronizar o status de salvamento
-    // Usa um timer para verificar o status não reativo do Armazenamento
-    setInterval(() => {
-      const statusAtual = Armazenamento._status;
-      if (saveStatus.value !== statusAtual) saveStatus.value = statusAtual;
     });
 
     const tituloView = computed(() => ({
@@ -892,14 +876,19 @@ const app = createApp({
       try {
         let md;
         const apiUrl = `/api/plano/${planoSelecionado.value}`;
-        const staticUrl = `/planos/${planoSelecionado.value}.md`;
+        const staticUrl = `planos/${planoSelecionado.value}.md`;
         const r = await fetch(apiUrl);
         if (r.ok) {
           md = await r.text();
         } else {
           const r2 = await fetch(staticUrl);
-          if (!r2.ok) throw new Error('Não encontrado');
-          md = await r2.text();
+          if (!r2.ok) {
+            const r3 = await fetch(`/${staticUrl}`);
+            if (!r3.ok) throw new Error('Não encontrado');
+            md = await r3.text();
+          } else {
+            md = await r2.text();
+          }
         }
         if (typeof marked !== 'undefined') {
           planoHtml.value = marked.parse(md, { breaks: true, gfm: true });
@@ -941,7 +930,7 @@ const app = createApp({
 
     return {
       view, menuAberta, semanaAtual,
-      tema, diasSemana, carregando, saveStatus,
+      tema, diasSemana, carregando,
       tituloView, subtituloView,
       semanasPlano, metaHoras, totalMeta,
       conteudos: CONTEUDOS,

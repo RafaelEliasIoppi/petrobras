@@ -645,8 +645,7 @@ button {
 [data-tema="dark"] .tabela-horas .total-coluna { background: #1f2335; }
 [data-tema="dark"] .tabela-horas td input { background: #0f1117; border-color: #2d3348; color: #e5e7eb; }
 [data-tema="dark"] .sidebar { background: #0a0c14; }
-[data-tema="dark"] .sidebar-hover { background: #1a1d29; }
-[data-tema="dark"] .sidebar-ativa { background: #1f2335; }
+
 
 /* Animações */
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
