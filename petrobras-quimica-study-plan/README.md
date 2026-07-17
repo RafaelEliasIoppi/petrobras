@@ -61,29 +61,33 @@ node server.js
 # Acessar: http://localhost:3000
 ```
 
-## Arquivos do Projeto
+## Estrutura do Projeto
 
-| Arquivo | Descrição |
-|---------|-----------|
-| **`cronograma-cesgranrio.md`** | **(principal)** Plano de 12 semanas focado Cesgranrio |
-| `cronograma-12-semanas-provas.md` | Plano anterior (ambas bancas) |
-| `conteudo-programatico.md` | Detalhamento de todos os tópicos |
-| `checklist-conteudos.md` | Checklist para impressão |
-| `quadro-horas.md` | Quadro de horas para impressão |
-| `server.js` | Servidor Node.js (zero dependências) |
-| `site/index.html` | Dashboard interativo |
-| `site/css/estilo.css` | Estilos do site |
-| `site/js/dados.js` | Dados dos conteúdos |
-| `site/js/armazenamento.js` | Persistência (arquivos + localStorage) |
-| `site/js/app.js` | App Vue 3 |
-| `summary.md` | Resumo do projeto |
-| `materias/portugues.md` | Plano detalhado de Português |
-| `materias/matematica.md` | Plano detalhado de Matemática |
-| `materias/quimica-geral.md` | Plano detalhado de Química Geral e Inorgânica |
-| `materias/quimica-organica.md` | Plano detalhado de Química Orgânica |
-| `materias/fisico-quimica.md` | Plano detalhado de Físico-Química |
-| `materias/quimica-analitica.md` | Plano detalhado de Química Analítica |
-| `materias/analise-instrumental.md` | Plano detalhado de Análise Instrumental |
-| `materias/metrologia-estatistica.md` | Plano detalhado de Metrologia e Estatística |
+```
+├── server.js              Servidor Node.js (Express 5)
+├── package.json           Dependências npm
+├── start.sh               Script de inicialização
+├── README.md              Documentação
+├── planos/                Cronogramas e planos de estudo
+│   ├── cronograma-cesgranrio.md      (principal) Plano 12 semanas Cesgranrio
+│   ├── cronograma-completo.md        Plano completo
+│   ├── cronograma-12-semanas-provas.md   Plano anterior (ambas bancas)
+│   ├── conteudo-programatico.md      Detalhamento de todos os tópicos
+│   ├── checklist-conteudos.md        Checklist para impressão
+│   ├── quadro-horas.md               Quadro de horas para impressão
+│   ├── caderno-erros.md              Caderno de erros
+│   ├── ciclo-estudos.md              Ciclo de estudos
+│   ├── metodologia-estudo.md         Metodologia de estudo
+│   ├── relatorio-metodos-concurseiros.md  Relatório de métodos
+│   └── revisoes-simulados.md         Revisões e simulados
+├── materias/              Planos detalhados por matéria
+├── resumos/               Resumos de estudo
+├── simulados/             Simulados
+├── dados/                 Dados runtime (persistência JSON)
+└── site/                  Aplicação web (Vue 3)
+    ├── index.html
+    ├── css/estilo.css
+    └── js/{app,dados,armazenamento}.js
+```
 
-> **Nota:** Os planos em `/materias/` incluem conteúdo de ambas as bancas. Para o foco Cesgranrio, priorize os tópicos listados em `cronograma-cesgranrio.md`.
+> **Nota:** Os planos em `planos/` são os cronogramas gerais. Em `materias/` estão os planos detalhados por disciplina.

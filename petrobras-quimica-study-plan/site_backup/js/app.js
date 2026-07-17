@@ -688,6 +688,7 @@ const app = createApp({
       erros: 'Caderno de Erros',
       flashcards: 'Flashcards',
       diario: 'Diário de Estudos',
+      cronograma: 'Cronograma Semanal',
       plano: 'Plano de Estudos'
     })[view.value]);
 
@@ -700,11 +701,31 @@ const app = createApp({
       erros: 'Caderno de Erros — cada erro é um ponto garantido',
       flashcards: 'Crie e revise seus flashcards',
       diario: 'Checklist diário do concurseiro aprovado',
+      cronograma: 'Cronograma detalhado semana a semana',
       plano: 'Consulte o cronograma e conteúdos programáticos'
     })[view.value]);
 
     // --- Computeds Globais ---
     const totalMeta = computed(() => semanasPlano * metaHoras);
+
+    // --- Cronograma ---
+    const periodos = ['08h-10h', '13h-15h', '20h-22h'];
+    const cronSemana = ref(1);
+    const cronograma = CRONOGRAMA_SEMANAL;
+
+    const semanaAtualDias = computed(() => {
+      const s = cronograma[cronSemana.value - 1];
+      return s ? s.dias : [];
+    });
+
+    function materiaInfo(cod) { return MATERIA_MAP[cod] || { nome: cod, icone: '📘', cor: '#6b7280' }; }
+
+    const materiasList = computed(() => {
+      const seen = {};
+      if (!semanaAtualDias.value) return [];
+      semanaAtualDias.value.forEach(d => d.slots.forEach(s => { seen[s.cod] = MATERIA_MAP[s.cod]; }));
+      return Object.entries(seen).map(([cod, info]) => ({ cod, ...info }));
+    });
 
     // --- Plano ---
     const planoSelecionado = ref('');
@@ -802,7 +823,9 @@ const app = createApp({
       ciclo, materiaAtual, cicloCompleto, cicloExpandido,
       avancarCiclo, reiniciarCiclo,
       CICLO_ESTUDOS, REVISAO_INTERVALOS, DIAS_SEMANA,
-      conteudosFiltrados, expandirTudo, colapsarTudo
+      conteudosFiltrados, expandirTudo, colapsarTudo,
+      // Cronograma
+      periodos, cronSemana, cronograma, semanaAtualDias, materiaInfo, materiasList
     };
   }
 });

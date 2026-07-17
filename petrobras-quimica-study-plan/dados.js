@@ -662,3 +662,12 @@ export const CHECKLIST_ITENS = [
     { id: 'questoes', texto: 'Resolvi um bloco de questões' },
     { id: 'erros', texto: 'Analisei e registrei os erros' },
 ];
+
+export const MATERIA_MAP = {
+  P:   { nome: 'Português',        icone: '\uD83D\uDCDD', cor: '#4CAF50' },
+  M:   { nome: 'Matemática',       icone: '\uD83D\uDD22', cor: '#2196F3' },
+  Q:   { nome: 'Química',          icone: '\uD83E\uDDEA', cor: '#FF9800' },
+  QO:  { nome: 'Química Orgânica', icone: '\uD83E\uDDEA', cor: '#E65100' },
+  R:   { nome: 'Revisão',          icone: '\uD83D\uDD04', cor: '#7C3AED' },
+  SIM: { nome: 'Simulado',         icone: '\uD83D\uDCCB', cor: '#DC2626' },
+};

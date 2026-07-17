@@ -669,6 +669,203 @@ button {
 .plano-conteudo blockquote { border-left: 4px solid var(--primaria); padding: 8px 16px; margin: 12px 0; background: var(--bg); border-radius: 0 6px 6px 0; }
 .plano-conteudo input[type="checkbox"] { accent-color: var(--primaria); }
 
+/* Cronograma Semanal */
+.cron-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.cron-nav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.cron-nav-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--borda);
+  background: var(--card);
+  color: var(--texto);
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.cron-nav-btn:hover:not(:disabled) { background: var(--primaria); color: #fff; border-color: var(--primaria); }
+.cron-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.cron-nav-info { text-align: center; }
+
+.cron-nav-semana {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--texto);
+  line-height: 1.3;
+}
+
+.cron-nav-titulo {
+  display: block;
+  font-size: 13px;
+  color: var(--texto-sec);
+  margin-top: 2px;
+}
+
+.cron-select {
+  padding: 10px 14px;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--card);
+  color: var(--texto);
+  cursor: pointer;
+  outline: none;
+  max-width: 320px;
+  width: 100%;
+}
+
+.cron-select:focus { border-color: var(--primaria); }
+
+.cron-tabela-wrapper {
+  background: var(--card);
+  border-radius: 12px;
+  box-shadow: var(--sombra);
+  overflow-x: auto;
+  margin-bottom: 16px;
+}
+
+.cron-tabela {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 620px;
+}
+
+.cron-tabela thead { position: sticky; top: 0; z-index: 2; }
+
+.cron-th-dia {
+  padding: 16px 12px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--texto-sec);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--card);
+  border-bottom: 2px solid var(--borda);
+  width: 120px;
+}
+
+.cron-th-horario {
+  padding: 16px 12px;
+  text-align: center;
+  background: var(--card);
+  border-bottom: 2px solid var(--borda);
+  width: 33%;
+}
+
+.cron-horario-badge {
+  display: inline-block;
+  padding: 4px 14px;
+  background: var(--bg);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--texto-sec);
+}
+
+.cron-linha { transition: background 0.15s; }
+.cron-linha:hover { background: rgba(0,0,0,0.02); }
+[data-tema="dark"] .cron-linha:hover { background: rgba(255,255,255,0.03); }
+
+.cron-linha:not(:last-child) td { border-bottom: 1px solid var(--borda); }
+
+.cron-dia-label {
+  padding: 16px 12px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--texto);
+  white-space: nowrap;
+}
+
+.cron-cell {
+  padding: 12px;
+  vertical-align: top;
+  min-height: 80px;
+}
+
+.cron-materia-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  border-left: 3px solid;
+  margin-bottom: 6px;
+  white-space: nowrap;
+}
+
+.cron-materia-icon { font-size: 14px; line-height: 1; }
+
+.cron-materia-nome { line-height: 1; }
+
+.cron-conteudo {
+  font-size: 13px;
+  color: var(--texto-sec);
+  line-height: 1.5;
+}
+
+.cron-legenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--card);
+  border-radius: 12px;
+  box-shadow: var(--sombra);
+}
+
+.cron-legenda-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--texto-sec);
+}
+
+.cron-legenda-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .cron-topo { flex-direction: column; align-items: stretch; }
+  .cron-nav { justify-content: center; }
+  .cron-nav-semana { font-size: 16px; }
+  .cron-nav-titulo { font-size: 12px; }
+  .cron-select { max-width: 100%; }
+  .cron-dia-label { font-size: 12px; padding: 12px 8px; width: 80px; }
+  .cron-cell { padding: 8px; }
+  .cron-conteudo { font-size: 12px; }
+  .cron-th-dia { width: 80px; padding: 12px 8px; font-size: 11px; }
+  .cron-th-horario { padding: 12px 8px; }
+  .cron-horario-badge { font-size: 11px; padding: 3px 10px; }
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }

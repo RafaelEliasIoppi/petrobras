@@ -41,6 +41,9 @@
         <a href="#diario" class="nav-item" :class="{ ativa: view === 'diario' }" @click.prevent="irPara('diario')">
           <span class="icone">📌</span> Diário
         </a>
+        <a href="#cronograma" class="nav-item" :class="{ ativa: view === 'cronograma' }" @click.prevent="irPara('cronograma')">
+          <span class="icone">📅</span> Cronograma
+        </a>
         <div style="border-top:1px solid rgba(255,255,255,0.08);margin:8px 16px;"></div>
         <a href="#plano" class="nav-item" :class="{ ativa: view === 'plano' }" @click.prevent="irPara('plano')">
           <span class="icone">📖</span> Plano de Estudos
@@ -287,6 +290,57 @@
             </table>
           </div>
         </template>
+
+        <!-- CRONOGRAMA SEMANAL -->
+        <div v-if="view === 'cronograma'" key="cronograma">
+          <div class="cron-topo">
+            <div class="cron-nav">
+              <button @click="cronSemana--" :disabled="cronSemana <= 1" class="cron-nav-btn">‹</button>
+              <div class="cron-nav-info">
+                <span class="cron-nav-semana">Semana {{ cronSemana }} de {{ cronograma.length }}</span>
+                <span class="cron-nav-titulo">{{ cronograma[cronSemana-1]?.titulo }}</span>
+              </div>
+              <button @click="cronSemana++" :disabled="cronSemana >= cronograma.length" class="cron-nav-btn">›</button>
+            </div>
+            <select v-model.number="cronSemana" class="cron-select">
+              <option v-for="s in cronograma" :key="s.semana" :value="s.semana">
+                Semana {{ s.semana }} — {{ s.titulo }}
+              </option>
+            </select>
+          </div>
+
+          <div class="cron-tabela-wrapper">
+            <table class="cron-tabela">
+              <thead>
+                <tr>
+                  <th class="cron-th-dia">Dia</th>
+                  <th v-for="p in periodos" :key="p" class="cron-th-horario">
+                    <span class="cron-horario-badge">{{ p }}</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="d in semanaAtualDias" :key="d.dia" class="cron-linha">
+                  <td class="cron-dia-label">{{ d.dia }}</td>
+                  <td v-for="(slot, si) in d.slots" :key="si" class="cron-cell">
+                    <div class="cron-materia-badge" :style="{ background: materiaInfo(slot.cod).cor + '18', color: materiaInfo(slot.cod).cor, borderLeftColor: materiaInfo(slot.cod).cor }">
+                      <span class="cron-materia-icon">{{ materiaInfo(slot.cod).icone }}</span>
+                      <span class="cron-materia-nome">{{ materiaInfo(slot.cod).nome }}</span>
+                    </div>
+                    <div class="cron-conteudo">{{ slot.conteudo }}</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="cron-legenda">
+            <span v-for="m in materiasList" :key="m.cod" class="cron-legenda-item">
+              <span class="cron-legenda-dot" :style="{ background: m.cor }"></span>
+              {{ m.icone }} {{ m.nome }}
+            </span>
+          </div>
+        </div>
 
         <!-- PLANO -->
         <template v-if="view === 'plano'">
