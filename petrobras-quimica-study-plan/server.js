@@ -8,7 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const SITE_DIR = path.join(__dirname, 'site');
 const DADOS_DIR = path.join(__dirname, 'dados');
-const PLANOS_DIR = __dirname;
+const PLANOS_DIR = path.join(__dirname, 'planos');
 
 if (!fs.existsSync(DADOS_DIR)) {
   fs.mkdirSync(DADOS_DIR, { recursive: true });
@@ -107,7 +107,7 @@ app.get('/api/planos', async (req, res) => {
       return planos;
     };
     const grupos = [
-      { path: 'planos', grupo: 'Cronogramas e Planos' },
+      { path: '.', grupo: 'Cronogramas e Planos' },
       { path: 'materias', grupo: 'Matérias' },
       { path: 'resumos', grupo: 'Resumos' },
       { path: 'simulados', grupo: 'Simulados' },
