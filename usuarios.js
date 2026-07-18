@@ -1,4 +1,5 @@
 const PREFIXO = 'petrobras_quimica_';
+import { Armazenamento } from './armazenamento.js';
 
 async function hashPassword(password) {
   const encoder = new TextEncoder();
@@ -39,6 +40,10 @@ export async function carregarUsuarios() {
     localStorage.setItem(PREFIXO + 'admin_usuarios', JSON.stringify(USUARIOS_PADRAO_HASHED));
   }
   return USUARIOS_PADRAO_HASHED;
+}
+
+export async function salvarUsuarios(usuarios) {
+  Armazenamento.salvar('admin_usuarios', usuarios, 0);
 }
 
 export function getDefaultUsuarios() {
