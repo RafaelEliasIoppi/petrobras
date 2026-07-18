@@ -230,6 +230,7 @@ function voltarParaLogin() {
   display: flex;
   align-items: center;
   gap: 60px;
+  position: relative; /* Garante que o z-index funcione corretamente */
   z-index: 1;
   padding: 40px;
   max-width: 960px;
