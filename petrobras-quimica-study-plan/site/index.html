@@ -76,7 +76,7 @@
         </div>
       </div>
       <div class="social-proof" v-if="!autenticado">
-        <div class="sp-visualizacoes">👀 <strong>{{ visitantesOnline }}</strong> pessoas estudando agora</div>
+        <div class="sp-visualizacoes">👀 <strong>{{ visitantesExibir }}</strong> pessoas estudando agora</div>
       </div>
       <div class="login-footer" v-if="!autenticado">
         <div class="login-footer-grid">
@@ -1372,7 +1372,7 @@
       <div class="rotulo">Usuários</div>
     </div>
     <div class="cartao-stat" style="border-top-color:#10b981;">
-      <div class="valor" style="color:#10b981;font-size:20px;">{{ visitantesOnline }}</div>
+      <div class="valor" style="color:#10b981;font-size:20px;">{{ visitantesExibir }}</div>
       <div class="rotulo">Visitantes</div>
     </div>
   </div>
