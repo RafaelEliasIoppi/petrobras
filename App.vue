@@ -1,9 +1,9 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch, defineAsyncComponent } from 'vue';
+import { ref, computed, onMounted, defineAsyncComponent } from 'vue';
 
 import Login from './Login.vue';
-import Dashboard from './Dashboard.vue';
-import { autenticar } from './usuarios.js';
+import Dashboard from './Dashboard.vue'; // Importado estaticamente para performance inicial
+import { autenticar, carregarUsuarios, hashPassword, salvarUsuarios } from './usuarios.js';
 
 const Checklist = defineAsyncComponent(() => import('./Checklist.vue'));
 const Horas = defineAsyncComponent(() => import('./Horas.vue'));
@@ -25,11 +25,7 @@ function gerarToken() {
 const usuarioAtual = ref(null);
 const autenticado = ref(false);
 const erroLogin = ref(false);
-const modoCadastro = ref(false);
-const loginNome = ref('');
-const loginEmail = ref('');
-const mensagemErro = ref('');
-const visitantesOnline = ref(0);
+const erroMsg = ref('');
 
 const FEATURES_BLOQUEADAS_DEMO = new Set([
   'ciclo', 'horas', 'simulados', 'erros',
@@ -89,53 +85,12 @@ async function handleLogin(usuario, senha) {
     usuarioAtual.value = user;
     autenticado.value = true;
     erroLogin.value = false;
-    mensagemErro.value = '';
     const sessao = { user, token: gerarToken(), timestamp: Date.now() };
     sessionStorage.setItem(SESSAO_KEY, JSON.stringify(sessao));
     localStorage.setItem(SESSAO_KEY, JSON.stringify(sessao));
   } else {
     erroLogin.value = true;
-    mensagemErro.value = 'Usuario ou senha invalidos';
   }
-}
-
-async function handleRegister(usuario, senha, nome, email) {
-  erroLogin.value = false;
-  mensagemErro.value = '';
-  if (!usuario || !senha || !nome) {
-    mensagemErro.value = 'Preencha usuario, nome e senha';
-    erroLogin.value = true;
-    return;
-  }
-  try {
-    const r = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ usuario, senha, nome, email })
-    });
-    const data = await r.json();
-    if (!data.ok) {
-      mensagemErro.value = data.erro || 'Erro ao criar conta';
-      erroLogin.value = true;
-      return;
-    }
-    await handleLogin(usuario, senha);
-  } catch {
-    mensagemErro.value = 'Erro de conexao com o servidor';
-    erroLogin.value = true;
-  }
-}
-
-async function registrarVisita() {
-  try {
-    const r = await fetch('/api/visitas/registrar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userAgent: navigator.userAgent, pagina: window.location.hash || '/' })
-    });
-    const data = await r.json();
-    visitantesOnline.value = data.visitantesUnicos || data.total || 0;
-  } catch {}
 }
 
 function logout() {
@@ -179,20 +134,10 @@ onMounted(() => {
     if (e.key === SESSAO_KEY) verificarSessao();
   });
   verificarSessao();
-  registrarVisita();
   navegarHash();
   setTimeout(() => {
     carregando.value = false;
   }, 200);
-});
-
-watch([view, autenticado], () => {
-  const aberta = autenticado.value && featureBloqueada(view.value);
-  document.documentElement.classList.toggle('overlay-open', aberta);
-}, { immediate: true });
-
-onUnmounted(() => {
-  document.documentElement.classList.remove('overlay-open');
 });
 
 const views = {
@@ -227,19 +172,12 @@ const planoLink = { view: 'plano', icon: '📖', text: 'Plano de Estudos' };
 </script>
 
 <template>
-  <Login v-if="!autenticado" :erro="erroLogin" :erro-msg="mensagemErro" :modo-cadastro="modoCadastro" @tentativa-login="handleLogin" @tentativa-register="handleRegister" @update:modo-cadastro="v => modoCadastro = v" />
-  <div v-if="!autenticado" class="login-depoimentos">
-    <div class="depoimentos-grid">
-      <div v-for="d in depoimentos.slice(0, 3)" :key="d.nome" class="depoimento-card">
-        <div class="dep-estrelas"><span v-for="s in d.estrelas">★</span></div>
-        <p class="dep-texto">"{{ d.texto }}"</p>
-        <strong class="dep-nome">— {{ d.nome }}, {{ d.cidade }}</strong>
-      </div>
-    </div>
-  </div>
-  <div v-if="!autenticado" class="social-proof">
-    <div class="sp-visualizacoes">👀 <strong>{{ visitantesOnline }}</strong> pessoas estudando agora</div>
-  </div>
+  <Login
+    v-if="!autenticado"
+    :erro="erroLogin"
+    :erro-msg="erroMsg"
+    @tentativa-login="handleLogin"
+  />
 
   <div v-else-if="carregando" class="loading-screen">
     Carregando...
@@ -296,7 +234,7 @@ const planoLink = { view: 'plano', icon: '📖', text: 'Plano de Estudos' };
             :usuarioLogado="view === 'admin' ? usuarioAtual?.usuario : undefined"
           />
         </transition>
-        <div v-if="featureBloqueada(view)" class="overlay-bloqueio" @click="irPara('dashboard')">
+        <div v-if="featureBloqueada(view)" class="overlay-bloqueio" @click="irPara('dashboard')" @scroll.prevent @wheel.prevent @touchmove.prevent>
           <div class="overlay-card" @click.stop>
             <button class="overlay-fechar" @click="irPara('dashboard')">✕</button>
             <div class="overlay-crown">👑</div>
@@ -367,16 +305,6 @@ const planoLink = { view: 'plano', icon: '📖', text: 'Plano de Estudos' };
   animation: overlayIn 0.4s ease-out;
   box-shadow: 0 25px 60px rgba(0,0,0,0.5);
   position: relative;
-  max-height: min(85vh, 560px);
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-}
-
-:global(html.overlay-open),
-:global(html.overlay-open body) {
-  overflow: hidden;
-  height: 100%;
 }
 
 .overlay-fechar {
@@ -423,12 +351,6 @@ const planoLink = { view: 'plano', icon: '📖', text: 'Plano de Estudos' };
 
 .overlay-whatsapp svg {
   flex-shrink: 0;
-}
-
-@media (max-width: 600px) {
-  .overlay-card {
-    padding: 32px 20px 24px;
-  }
 }
 
 @keyframes overlayIn {

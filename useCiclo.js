@@ -1,12 +1,8 @@
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, watchEffect } from 'vue';
 import { Armazenamento } from './armazenamento.js';
 import { CICLO_ESTUDOS } from './dados.js';
 
-let instance;
-
 export function useCiclo() {
-  if (instance) return instance;
-
   const ciclo = ref(Armazenamento.carregar('ciclo', { posicao: 0, concluido: {} }));
 
   const CICLO_PONDERADO = computed(() => {
@@ -21,11 +17,6 @@ export function useCiclo() {
 
   const totalPonderado = computed(() => CICLO_PONDERADO.value.length);
 
-  if (ciclo.value.posicao >= totalPonderado.value) {
-    ciclo.value.posicao = 0;
-    Armazenamento.salvar('ciclo', ciclo.value);
-  }
-
   const cicloExpandido = ref(false);
 
   watch(ciclo, (novoValor) => {
@@ -33,6 +24,13 @@ export function useCiclo() {
   }, { deep: true });
 
   const materiaAtual = computed(() => CICLO_PONDERADO.value[ciclo.value.posicao]);
+
+  // Garante que a posição do ciclo seja sempre válida e persiste a correção.
+  watchEffect(() => {
+    if (totalPonderado.value > 0 && ciclo.value.posicao >= totalPonderado.value) {
+      ciclo.value.posicao = 0;
+    }
+  });
 
   const idxOriginalAtual = computed(() => materiaAtual.value?.idxOriginal ?? 0);
 
@@ -62,10 +60,9 @@ export function useCiclo() {
     ciclo.value = { posicao: 0, concluido: {} };
   }
 
-  instance = {
+  return {
     ciclo, cicloExpandido, CICLO_ESTUDOS, materiaAtual, idxOriginalAtual,
     cicloCompleto, completosPorItem, totalPonderado,
     avancarCiclo, reiniciarCiclo
   };
-  return instance;
 }
