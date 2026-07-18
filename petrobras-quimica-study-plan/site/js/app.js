@@ -2167,19 +2167,21 @@ const app = createApp({
     const loginNome = ref('');
     const loginEmail = ref('');
     const mensagemErro = ref('');
-    const notificacoes = ref([]);
     const isPremium = ref(false);
+    const visitantesOnline = ref(0);
+    const visitasLista = ref([]);
+    const carregandoVisitas = ref(false);
     const depoimentos = [
-      { nome: 'Carlos Silva', avatar: '👨‍🔬', texto: 'Conteúdo muito bom, melhorou muito meus estudos!', estrelas: 5 },
-      { nome: 'Ana Oliveira', avatar: '👩‍💻', texto: 'Gostei das questões, muito parecidas com a prova.', estrelas: 5 },
-      { nome: 'Pedro Santos', avatar: '👨‍🎓', texto: 'Custo-benefício ótimo, recomendo para todos!', estrelas: 5 },
-      { nome: 'Juliana Costa', avatar: '👩‍🔬', texto: 'Flashcards salvadores, aprendi muito mais rápido.', estrelas: 5 },
-      { nome: 'Marcos Lima', avatar: '👨‍🏫', texto: 'Plano de estudos muito bem organizado. Aprovado!', estrelas: 5 },
-      { nome: 'Fernanda Rocha', avatar: '👩‍🎓', texto: 'Material completo e atualizado com o edital.', estrelas: 4 },
-      { nome: 'Lucas Pereira', avatar: '👨‍💼', texto: 'O ciclo de estudos é genial, super eficiente!', estrelas: 5 },
-      { nome: 'Camila Souza', avatar: '👩‍🏫', texto: 'Questões no estilo Cesgranrio, idênticas à prova.', estrelas: 5 },
-      { nome: 'Rafael Costa', avatar: '👨‍🔬', texto: 'Comprei o Premium e não me arrependo. Vale cada centavo!', estrelas: 5 },
-      { nome: 'Beatriz Martins', avatar: '👩‍💼', texto: 'Dashboard completo, consigo ver meu progresso todo dia.', estrelas: 5 }
+      { nome: 'Carlos S.', cidade: 'São Paulo, SP', texto: 'Material bem organizado e atualizado com o edital. Consegui estudar de forma consistente.', estrelas: 5 },
+      { nome: 'Ana O.', cidade: 'Rio de Janeiro, RJ', texto: 'As questões são muito parecidas com o estilo Cesgranrio. Isso fez diferença na minha preparação.', estrelas: 5 },
+      { nome: 'Pedro S.', cidade: 'Belo Horizonte, MG', texto: 'Custo-benefício excelente. Usei todos os dias até a prova.', estrelas: 5 },
+      { nome: 'Juliana C.', cidade: 'Porto Alegre, RS', texto: 'O ciclo de estudos me ajudou a manter a disciplina. Recomendo.', estrelas: 5 },
+      { nome: 'Marcos L.', cidade: 'Salvador, BA', texto: 'Plano de estudos bem estruturado, consegui organizar minha rotina.', estrelas: 5 },
+      { nome: 'Fernanda R.', cidade: 'Curitiba, PR', texto: 'Conteúdo completo e direto ao ponto. Aprovada no concurso!', estrelas: 5 },
+      { nome: 'Lucas P.', cidade: 'Brasília, DF', texto: 'Os flashcards são ótimos para revisão rápida. Usei muito.', estrelas: 5 },
+      { nome: 'Camila S.', cidade: 'Florianópolis, SC', texto: 'Ótimo material de apoio para quem está começando do zero.', estrelas: 4 },
+      { nome: 'Rafael C.', cidade: 'Recife, PE', texto: 'Valeu a pena o investimento. Conteúdo de qualidade.', estrelas: 5 },
+      { nome: 'Beatriz M.', cidade: 'Fortaleza, CE', texto: 'Consegui ver meu progresso ao longo do tempo, muito motivador.', estrelas: 5 }
     ];
 
     function logout() {
@@ -2214,33 +2216,6 @@ const app = createApp({
         usuarioAtual.value = localParsed.user;
         autenticado.value = true;
       } catch { logout() }
-    }
-
-    // === SOCIAL PROOF ===
-    const SP_NOMES = [
-      { nome: 'Carlos Silva', avatar: '👨‍🔬', texto: 'acabou de comprar o Premium!', cidade: 'SP' },
-      { nome: 'Ana Oliveira', avatar: '👩‍💻', texto: 'acabou de comprar o Premium!', cidade: 'RJ' },
-      { nome: 'Pedro Santos', avatar: '👨‍🎓', texto: 'está estudando Química agora', cidade: 'MG' },
-      { nome: 'Juliana Costa', avatar: '👩‍🔬', texto: 'acabou de comprar o Premium!', cidade: 'RS' },
-      { nome: 'Marcos Lima', avatar: '👨‍🏫', texto: 'está resolvendo questões', cidade: 'BA' },
-      { nome: 'Fernanda Rocha', avatar: '👩‍🎓', texto: 'acabou de comprar o Premium!', cidade: 'PR' },
-      { nome: 'Lucas Pereira', avatar: '👨‍💼', texto: 'está no Ciclo de Estudos', cidade: 'DF' },
-      { nome: 'Camila Souza', avatar: '👩‍🏫', texto: 'acabou de comprar o Premium!', cidade: 'SC' },
-      { nome: 'Rafael Costa', avatar: '👨‍🔬', texto: 'está fazendo flashcards', cidade: 'PE' },
-      { nome: 'Beatriz Martins', avatar: '👩‍💼', texto: 'acabou de comprar o Premium!', cidade: 'CE' }
-    ];
-    let spInterval;
-
-    function iniciarSocialProof() {
-      if (spInterval) clearInterval(spInterval);
-      spInterval = setInterval(() => {
-        const p = SP_NOMES[Math.floor(Math.random() * SP_NOMES.length)];
-        const id = Date.now() + Math.random();
-        notificacoes.value.push({ id, ...p });
-        setTimeout(() => {
-          notificacoes.value = notificacoes.value.filter(n => n.id !== id);
-        }, 5000);
-      }, 4000 + Math.random() * 4000);
     }
 
     // === REGISTER & PREMIUM ===
@@ -2312,6 +2287,32 @@ const app = createApp({
       } catch { isPremium.value = false; }
     }
 
+    // === VISITAS ===
+    async function registrarVisita() {
+      try {
+        const r = await fetch('/api/visitas/registrar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userAgent: navigator.userAgent, pagina: window.location.hash || '/' })
+        });
+        const data = await r.json();
+        visitantesOnline.value = data.visitantesUnicos || data.total || 0;
+      } catch {}
+    }
+
+    async function carregarVisitas() {
+      carregandoVisitas.value = true;
+      try {
+        const r = await fetch('/api/visitas/total');
+        const data = await r.json();
+        visitantesOnline.value = data.visitantesUnicos || 0;
+        visitasLista.value = data.visitas || [];
+      } catch {}
+      carregandoVisitas.value = false;
+    }
+
+    const usuarioLogado = computed(() => usuarioAtual.value?.nome || 'Usuário');
+
     // --- Estado da UI e Navegação ---
     const view = ref('dashboard');
     const menuAberta = ref(false);
@@ -2380,7 +2381,7 @@ const app = createApp({
         if (e.key === SESSAO_KEY) verificarSessao();
       });
       verificarSessao();
-      iniciarSocialProof();
+      registrarVisita();
 
       carregando.value = true;
       const config = await Armazenamento.getConfig();
@@ -2586,7 +2587,8 @@ const app = createApp({
       usuarioAtual, autenticado, erroLogin, usuarioLogado,
       handleLogin, logout, loginUsuario, loginSenha, mostrarSenha,
       modoCadastro, loginNome, loginEmail, mensagemErro,
-      handleRegister, comprarPremium, isPremium, depoimentos, notificacoes,
+      handleRegister, comprarPremium, isPremium, depoimentos,
+      visitantesOnline, registrarVisita, carregarVisitas, carregandoVisitas,
       view, menuAberta, semanaAtual,
       tema, diasSemana, carregando,
       tituloView, subtituloView,

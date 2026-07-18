@@ -25,6 +25,11 @@ function gerarToken() {
 const usuarioAtual = ref(null);
 const autenticado = ref(false);
 const erroLogin = ref(false);
+const modoCadastro = ref(false);
+const loginNome = ref('');
+const loginEmail = ref('');
+const mensagemErro = ref('');
+const visitantesOnline = ref(0);
 
 const FEATURES_BLOQUEADAS_DEMO = new Set([
   'ciclo', 'horas', 'simulados', 'erros',
@@ -84,12 +89,53 @@ async function handleLogin(usuario, senha) {
     usuarioAtual.value = user;
     autenticado.value = true;
     erroLogin.value = false;
+    mensagemErro.value = '';
     const sessao = { user, token: gerarToken(), timestamp: Date.now() };
     sessionStorage.setItem(SESSAO_KEY, JSON.stringify(sessao));
     localStorage.setItem(SESSAO_KEY, JSON.stringify(sessao));
   } else {
     erroLogin.value = true;
+    mensagemErro.value = 'Usuario ou senha invalidos';
   }
+}
+
+async function handleRegister(usuario, senha, nome, email) {
+  erroLogin.value = false;
+  mensagemErro.value = '';
+  if (!usuario || !senha || !nome) {
+    mensagemErro.value = 'Preencha usuario, nome e senha';
+    erroLogin.value = true;
+    return;
+  }
+  try {
+    const r = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuario, senha, nome, email })
+    });
+    const data = await r.json();
+    if (!data.ok) {
+      mensagemErro.value = data.erro || 'Erro ao criar conta';
+      erroLogin.value = true;
+      return;
+    }
+    await handleLogin(usuario, senha);
+  } catch {
+    mensagemErro.value = 'Erro de conexao com o servidor';
+    erroLogin.value = true;
+  }
+}
+
+async function registrarVisita() {
+  try {
+    const r = await fetch('/api/visitas/registrar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userAgent: navigator.userAgent, pagina: window.location.hash || '/' })
+    });
+    const data = await r.json();
+    visitantesOnline.value = data.visitantesUnicos || data.total || 0;
+  } catch {}
 }
 
 function logout() {
@@ -133,6 +179,7 @@ onMounted(() => {
     if (e.key === SESSAO_KEY) verificarSessao();
   });
   verificarSessao();
+  registrarVisita();
   navegarHash();
   setTimeout(() => {
     carregando.value = false;
@@ -171,7 +218,19 @@ const planoLink = { view: 'plano', icon: '📖', text: 'Plano de Estudos' };
 </script>
 
 <template>
-  <Login v-if="!autenticado" :erro="erroLogin" @tentativa-login="handleLogin" />
+  <Login v-if="!autenticado" :erro="erroLogin" :erro-msg="mensagemErro" :modo-cadastro="modoCadastro" @tentativa-login="handleLogin" @tentativa-register="handleRegister" @update:modo-cadastro="v => modoCadastro = v" />
+  <div v-if="!autenticado" class="login-depoimentos">
+    <div class="depoimentos-grid">
+      <div v-for="d in depoimentos.slice(0, 3)" :key="d.nome" class="depoimento-card">
+        <div class="dep-estrelas"><span v-for="s in d.estrelas">★</span></div>
+        <p class="dep-texto">"{{ d.texto }}"</p>
+        <strong class="dep-nome">— {{ d.nome }}, {{ d.cidade }}</strong>
+      </div>
+    </div>
+  </div>
+  <div v-if="!autenticado" class="social-proof">
+    <div class="sp-visualizacoes">👀 <strong>{{ visitantesOnline }}</strong> pessoas estudando agora</div>
+  </div>
 
   <div v-else-if="carregando" class="loading-screen">
     Carregando...

@@ -91,30 +91,18 @@
         </div>
       </div>
       <div class="login-depoimentos">
-        <h3>📍 O que nossos alunos dizem</h3>
         <div class="depoimentos-grid">
-          <div v-for="d in depoimentos.slice(0, 4)" :key="d.nome" class="depoimento-card">
-            <div class="dep-avatar">{{ d.avatar }}</div>
-            <div class="dep-content">
-              <div class="dep-estrelas">
-                <span v-for="s in d.estrelas">⭐</span>
-              </div>
-              <p class="dep-texto">"{{ d.texto }}"</p>
-              <strong class="dep-nome">{{ d.nome }}</strong>
-            </div>
+          <div v-for="d in depoimentos.slice(0, 3)" :key="d.nome" class="depoimento-card">
+            <div class="dep-estrelas"><span v-for="s in d.estrelas">★</span></div>
+            <p class="dep-texto">"{{ d.texto }}"</p>
+            <strong class="dep-nome">— {{ d.nome }}</strong>
           </div>
         </div>
       </div>
       </div>
     </div>
     <div class="social-proof" v-if="!autenticado">
-      <div class="sp-visualizacoes">👀 <span id="sp-visitors">47</span> pessoas estão vendo agora</div>
-      <transition-group name="sp-fade" tag="div" class="sp-notificacoes">
-        <div v-for="(n, i) in notificacoes" :key="n.id" class="sp-notificacao">
-          <span class="sp-avatar">{{ n.avatar }}</span>
-          <div><strong>{{ n.nome }}</strong> {{ n.texto }}</div>
-        </div>
-      </transition-group>
+      <div class="sp-visualizacoes">👀 <strong>{{ visitantesOnline }}</strong> pessoas estudando agora</div>
     </div>
     <template v-if="autenticado">
     <div v-if="carregando" style="display:flex;align-items:center;justify-content:center;height:100vh;font-size:18px;color:var(--texto-sec);">
@@ -1362,6 +1350,10 @@
       <div class="valor" style="color:#3b82f6;font-size:20px;">{{ adminComuns.length }}</div>
       <div class="rotulo">Usuários</div>
     </div>
+    <div class="cartao-stat" style="border-top-color:#10b981;">
+      <div class="valor" style="color:#10b981;font-size:20px;">{{ visitantesOnline }}</div>
+      <div class="rotulo">Visitantes</div>
+    </div>
   </div>
 
   <div class="card">
@@ -1462,14 +1454,11 @@
           <div class="card-titulo">💬 O que nossos alunos dizem</div>
           <div style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));">
             <div v-for="d in depoimentos" :key="d.nome" style="background:var(--fundo-sec);padding:16px;border-radius:8px;">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                <span style="font-size:28px;">{{ d.avatar }}</span>
-                <div>
-                  <strong>{{ d.nome }}</strong>
-                  <div><span v-for="s in d.estrelas" style="font-size:14px;">⭐</span></div>
-                </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                <strong style="font-size:14px;">{{ d.nome }}</strong>
+                <span style="font-size:12px;color:#f59e0b;letter-spacing:1px;"><span v-for="s in d.estrelas">★</span></span>
               </div>
-              <p style="font-size:14px;color:var(--texto-sec);font-style:italic;">"{{ d.texto }}"</p>
+              <p style="font-size:13px;color:var(--texto-sec);line-height:1.5;margin:0;font-style:italic;">"{{ d.texto }}"</p>
             </div>
           </div>
         </div>
@@ -1499,10 +1488,20 @@
 
     <footer class="rodape">
       <div class="conteudo-rodape">
-         <p>🎓 <strong>Petrobras Academy</strong></p>
-        <p style="font-size:12px;color:var(--texto-sec);margin-top:4px;">
-          Plano de Estudos | Concurso Petrobras 2026 | Cesgranrio
-        </p>
+        <div class="rodape-grid">
+          <div class="rodape-col">
+            <p><strong>🎓 Petrobras Academy</strong></p>
+            <p class="rodape-sub">Plano de Estudos • Concurso Petrobras 2026 • Cesgranrio</p>
+          </div>
+          <div class="rodape-col rodape-cta">
+            <a href="#premium" @click.prevent="irPara('premium')" class="rodape-link">
+              👑 Seja Premium — <strong>R$ 49,90</strong>
+            </a>
+            <a href="https://wa.me/5551983098650?text=Ol%C3%A1!%20Quero%20adquirir%20o%20Premium%20da%20Petrobras%20Academy" target="_blank" rel="noopener noreferrer" class="rodape-whatsapp">
+              💬 Fale conosco no WhatsApp
+            </a>
+          </div>
+        </div>
       </div>
     </footer>
     </template>

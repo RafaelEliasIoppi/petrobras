@@ -1,18 +1,26 @@
 <script setup>
 import { ref } from 'vue';
 
-defineProps({
+const props = defineProps({
   erro: Boolean,
+  erroMsg: String,
+  modoCadastro: Boolean,
 });
 
-const emit = defineEmits(['tentativa-login']);
+const emit = defineEmits(['tentativa-login', 'tentativa-register', 'update:modoCadastro']);
 
 const usuarioDigitado = ref('');
 const senhaDigitada = ref('');
 const mostrarSenha = ref(false);
+const nomeDigitado = ref('');
+const emailDigitado = ref('');
 
 function submeter() {
-  emit('tentativa-login', usuarioDigitado.value, senhaDigitada.value);
+  if (props.modoCadastro) {
+    emit('tentativa-register', usuarioDigitado.value, senhaDigitada.value, nomeDigitado.value, emailDigitado.value);
+  } else {
+    emit('tentativa-login', usuarioDigitado.value, senhaDigitada.value);
+  }
 }
 </script>
 
@@ -45,40 +53,34 @@ function submeter() {
       </div>
       <div class="login-card">
         <div class="login-card-header">
-          <h2>Acessar Plataforma</h2>
-          <p>Informe suas credenciais</p>
+          <h2>{{ modoCadastro ? 'Criar Conta' : 'Acessar Plataforma' }}</h2>
+          <p>{{ modoCadastro ? 'Crie sua conta' : 'Informe suas credenciais' }}</p>
+        </div>
+        <div class="login-tabs">
+          <button class="login-tab" :class="{ active: !modoCadastro }" @click="$emit('update:modoCadastro', false)">Entrar</button>
+          <button class="login-tab" :class="{ active: modoCadastro }" @click="$emit('update:modoCadastro', true)">Criar Conta</button>
         </div>
         <form @submit.prevent="submeter" class="login-form">
           <div class="input-group">
             <label for="usuario">Usuário</label>
-            <input
-              id="usuario"
-              v-model="usuarioDigitado"
-              type="text"
-              placeholder="Seu nome de usuário"
-              class="input-field"
-              autofocus
-              autocomplete="username"
-            />
+            <input id="usuario" v-model="usuarioDigitado" type="text" placeholder="Seu nome de usuário" class="input-field" autofocus autocomplete="username" />
             <span class="input-icon">👤</span>
+          </div>
+          <div v-if="modoCadastro" class="input-group">
+            <label for="nome">Nome</label>
+            <input id="nome" v-model="nomeDigitado" type="text" placeholder="Seu nome completo" class="input-field" />
+            <span class="input-icon">📝</span>
+          </div>
+          <div v-if="modoCadastro" class="input-group">
+            <label for="email">E-mail (opcional)</label>
+            <input id="email" v-model="emailDigitado" type="email" placeholder="seu@email.com" class="input-field" />
+            <span class="input-icon">📧</span>
           </div>
           <div class="input-group">
             <label for="senha">Senha</label>
             <div class="campo-senha">
-              <input
-                id="senha"
-                v-model="senhaDigitada"
-                :type="mostrarSenha ? 'text' : 'password'"
-                placeholder="Sua senha"
-                class="input-field"
-                autocomplete="current-password"
-              />
-              <button
-                type="button"
-                class="olho-senha"
-                @click="mostrarSenha = !mostrarSenha"
-                :aria-label="mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'"
-              >
+              <input id="senha" v-model="senhaDigitada" :type="mostrarSenha ? 'text' : 'password'" :placeholder="modoCadastro ? 'Crie uma senha (min 4 caracteres)' : 'Sua senha'" class="input-field" autocomplete="current-password" />
+              <button type="button" class="olho-senha" @click="mostrarSenha = !mostrarSenha" :aria-label="mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'">
                 <svg class="olho-icon olho-aberto" :class="{ soma: mostrarSenha }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                   <circle cx="12" cy="12" r="3"/>
@@ -92,14 +94,12 @@ function submeter() {
             </div>
           </div>
           <button type="submit" class="btn-entrar">
-            <span>Entrar</span>
+            <span>{{ modoCadastro ? 'Criar Conta' : 'Entrar' }}</span>
             <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M5 12h14M12 5l7 7-7 7"/>
             </svg>
           </button>
-          <p v-if="erro" class="msg-erro">
-            ⚠ Usuário ou senha inválidos. Tente novamente.
-          </p>
+          <p v-if="erro" class="msg-erro">⚠ {{ erroMsg || 'Usuário ou senha inválidos' }}</p>
         </form>
         <div class="login-card-footer">
           <p>Conta de demonstração: <strong>estudante</strong> / <strong>petro2026</strong></p>

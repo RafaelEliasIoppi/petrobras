@@ -13,6 +13,7 @@ const DADOS_DIR = path.join(__dirname, 'dados');
 const PLANOS_DIR = path.join(__dirname, 'planos');
 const USUARIOS_FILE = path.join(DADOS_DIR, 'usuarios.json');
 const PREMIUM_FILE = path.join(DADOS_DIR, 'premium.json');
+const VISITAS_FILE = path.join(DADOS_DIR, 'visitas.json');
 
 const MP_ACCESS_TOKEN = process.env.MP_TOKEN || 'APP_USR-3935088362204982-071815-adc4f6225c7d4da947e55691c76d2056-33790062';
 const SITE_URL = process.env.SITE_URL || 'http://163.176.163.213';
@@ -166,6 +167,29 @@ app.get('/api/plano/:grupo/:nome', planoHandler);
 app.get('/api/plano/:nome', planoHandler);
 
 app.use(express.static(SITE_DIR));
+
+// Favicon
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
+// ===================== VISITAS =====================
+app.post('/api/visitas/registrar', async (req, res) => {
+  const visitas = await lerJSON(VISITAS_FILE, []);
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'desconhecido';
+  const { userAgent, pagina } = req.body || {};
+  const existe = visitas.some(v => v.ip === ip && Date.now() - v.timestamp < 5 * 60 * 1000);
+  if (!existe) {
+    visitas.push({ ip, userAgent: userAgent || '', pagina: pagina || '/', timestamp: Date.now() });
+    // Keep last 1000 entries
+    if (visitas.length > 1000) visitas.splice(0, visitas.length - 1000);
+    await salvarJSON(VISITAS_FILE, visitas);
+  }
+  res.json({ ok: true, total: visitas.length, visitantesUnicos: new Set(visitas.map(v => v.ip)).size });
+});
+
+app.get('/api/visitas/total', async (req, res) => {
+  const visitas = await lerJSON(VISITAS_FILE, []);
+  res.json({ total: visitas.length, visitantesUnicos: new Set(visitas.map(v => v.ip)).size });
+});
 
 // ===================== AUTH =====================
 app.post('/api/auth/register', async (req, res) => {
