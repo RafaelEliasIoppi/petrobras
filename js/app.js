@@ -2167,6 +2167,25 @@ const app = createApp({
     const mostrarInfoPremium = ref(false);
     const isPremium = ref(false);
     const visitantesOnline = ref(0);
+    const visitantesExibir = ref(32);
+    let animFrameId = null;
+
+    function animarNumero(alvo) {
+      const seguro = Math.max(32, alvo);
+      const inicio = visitantesExibir.value;
+      const diff = seguro - inicio;
+      const passos = 20;
+      let passo = 0;
+      if (animFrameId) cancelAnimationFrame(animFrameId);
+      function tick() {
+        passo++;
+        const progresso = Math.min(passo / passos, 1);
+        const curvo = 1 - Math.pow(1 - progresso, 3);
+        visitantesExibir.value = Math.round(inicio + diff * curvo);
+        if (passo < passos) animFrameId = requestAnimationFrame(tick);
+      }
+      tick();
+    }
     const visitasLista = ref([]);
     const carregandoVisitas = ref(false);
     const depoimentos = [
@@ -2271,7 +2290,8 @@ const app = createApp({
         });
         const data = await r.json();
         visitantesOnline.value = data.visitantesUnicos || data.total || 0;
-      } catch {}
+        animarNumero(visitantesOnline.value);
+      } catch { animarNumero(0); }
     }
 
     async function carregarVisitas() {
@@ -2280,8 +2300,9 @@ const app = createApp({
         const r = await fetch('/api/visitas/total');
         const data = await r.json();
         visitantesOnline.value = data.visitantesUnicos || 0;
+        animarNumero(visitantesOnline.value);
         visitasLista.value = data.visitas || [];
-      } catch {}
+      } catch { animarNumero(0); }
       carregandoVisitas.value = false;
     }
 
