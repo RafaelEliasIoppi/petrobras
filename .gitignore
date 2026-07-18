@@ -3,3 +3,9 @@ dist
 .DS_Store
 *.log
 .env
+
+# Sensitive files
+Domínios - Painel Registrobr.csv
+configurar-dns.py
+test-login.py
+
