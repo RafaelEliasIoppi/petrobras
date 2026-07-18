@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, defineAsyncComponent } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, defineAsyncComponent } from 'vue';
 
 import Login from './Login.vue';
 import Dashboard from './Dashboard.vue';
@@ -186,6 +186,15 @@ onMounted(() => {
   }, 200);
 });
 
+watch([view, autenticado], () => {
+  const aberta = autenticado.value && featureBloqueada(view.value);
+  document.documentElement.classList.toggle('overlay-open', aberta);
+}, { immediate: true });
+
+onUnmounted(() => {
+  document.documentElement.classList.remove('overlay-open');
+});
+
 const views = {
   dashboard: Dashboard,
   checklist: Checklist,
@@ -287,7 +296,7 @@ const planoLink = { view: 'plano', icon: '📖', text: 'Plano de Estudos' };
             :usuarioLogado="view === 'admin' ? usuarioAtual?.usuario : undefined"
           />
         </transition>
-        <div v-if="featureBloqueada(view)" class="overlay-bloqueio" @click="irPara('dashboard')" @scroll.prevent @wheel.prevent @touchmove.prevent>
+        <div v-if="featureBloqueada(view)" class="overlay-bloqueio" @click="irPara('dashboard')">
           <div class="overlay-card" @click.stop>
             <button class="overlay-fechar" @click="irPara('dashboard')">✕</button>
             <div class="overlay-crown">👑</div>
@@ -358,6 +367,16 @@ const planoLink = { view: 'plano', icon: '📖', text: 'Plano de Estudos' };
   animation: overlayIn 0.4s ease-out;
   box-shadow: 0 25px 60px rgba(0,0,0,0.5);
   position: relative;
+  max-height: min(85vh, 560px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+:global(html.overlay-open),
+:global(html.overlay-open body) {
+  overflow: hidden;
+  height: 100%;
 }
 
 .overlay-fechar {
@@ -404,6 +423,12 @@ const planoLink = { view: 'plano', icon: '📖', text: 'Plano de Estudos' };
 
 .overlay-whatsapp svg {
   flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .overlay-card {
+    padding: 32px 20px 24px;
+  }
 }
 
 @keyframes overlayIn {
