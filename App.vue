@@ -90,7 +90,6 @@ async function handleLogin(usuario, senha) {
     localStorage.setItem(SESSAO_KEY, JSON.stringify(sessao));
   } else {
     erroLogin.value = true;
-  }
 }
 
 function logout() {
@@ -175,7 +174,6 @@ const planoLink = { view: 'plano', icon: '📖', text: 'Plano de Estudos' };
   <Login
     v-if="!autenticado"
     :erro="erroLogin"
-    :erro-msg="erroMsg"
     @tentativa-login="handleLogin"
   />
 

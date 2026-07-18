@@ -3,7 +3,6 @@ import { ref } from 'vue';
 
 const props = defineProps({
   erro: Boolean,
-  erroMsg: String,
 });
 
 const emit = defineEmits(['tentativa-login']);
@@ -64,7 +63,7 @@ function voltarParaLogin() {
         </div>
 
         <div v-if="instrucaoPremium" class="instrucao-premium">
-          <p>✅ **Pagamento realizado?**</p>
+          <p>✅ <strong>Pagamento realizado?</strong></p>
           <p>Envie o comprovante para o WhatsApp abaixo e em instantes você receberá seu usuário e senha exclusivos.</p>
           <a href="https://wa.me/5551983098650?text=Ol%C3%A1!%20Realizei%20o%20pagamento%20para%20o%20acesso%20Premium%20e%20gostaria%20de%20receber%20meu%20usu%C3%A1rio." target="_blank" class="btn-whatsapp">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -76,14 +75,34 @@ function voltarParaLogin() {
         <form v-else @submit.prevent="submeter" class="login-form">
           <div class="input-group">
             <label for="usuario">Usuário</label>
-            <input id="usuario" v-model="usuarioDigitado" type="text" placeholder="Seu nome de usuário" class="input-field" autofocus autocomplete="username" />
+            <input
+              id="usuario"
+              v-model="usuarioDigitado"
+              type="text"
+              placeholder="Seu nome de usuário"
+              class="input-field"
+              autofocus
+              autocomplete="username"
+            />
             <span class="input-icon">👤</span>
           </div>
           <div class="input-group">
             <label for="senha">Senha</label>
             <div class="campo-senha">
-              <input id="senha" v-model="senhaDigitada" :type="mostrarSenha ? 'text' : 'password'" placeholder="Sua senha" class="input-field" autocomplete="current-password" />
-              <button type="button" class="olho-senha" @click="mostrarSenha = !mostrarSenha" :aria-label="mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'">
+              <input
+                id="senha"
+                v-model="senhaDigitada"
+                :type="mostrarSenha ? 'text' : 'password'"
+                placeholder="Sua senha"
+                class="input-field"
+                autocomplete="current-password"
+              />
+              <button
+                type="button"
+                class="olho-senha"
+                @click="mostrarSenha = !mostrarSenha"
+                :aria-label="mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'"
+              >
                 <svg class="olho-icon olho-aberto" :class="{ soma: mostrarSenha }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                   <circle cx="12" cy="12" r="3"/>
@@ -102,13 +121,17 @@ function voltarParaLogin() {
               <path d="M5 12h14M12 5l7 7-7 7"/>
             </svg>
           </button>
-          <p v-if="erro" class="msg-erro" role="alert" aria-live="assertive">⚠ {{ erroMsg || 'Usuário ou senha inválidos' }}</p>
+          <p v-if="props.erro" class="msg-erro">
+            ⚠ Usuário ou senha inválidos. Tente novamente.
+          </p>
         </form>
-
         <div class="login-card-footer">
-          <button v-if="!instrucaoPremium" @click="abrirLinkPremium" class="btn-premium">
-            👑 Não tenho conta, quero ser Premium
-          </button>
+          <div v-if="!instrucaoPremium" class="login-premium-cta">
+            <button @click="abrirLinkPremium" class="login-premium-link">
+              👑 Seja Premium — <strong>R$ 49,90</strong>
+            </button>
+            <span class="login-premium-sub">Pagamento único • Acesso vitalício • Pix ou cartão</span>
+          </div>
           <p>Conta de demonstração: <strong>estudante</strong> / <strong>petro2026</strong></p>
         </div>
       </div>
@@ -183,6 +206,7 @@ function voltarParaLogin() {
   position: absolute;
   inset: 0;
   overflow: hidden;
+  pointer-events: none; /* Garante que o fundo não intercepte cliques. */
 }
 
 .bg-shape {
@@ -230,7 +254,7 @@ function voltarParaLogin() {
   display: flex;
   align-items: center;
   gap: 60px;
-  position: relative; /* Garante que o z-index funcione corretamente */
+  position: relative;
   z-index: 1;
   padding: 40px;
   max-width: 960px;
@@ -324,23 +348,6 @@ function voltarParaLogin() {
 .login-card-header p {
   font-size: 14px;
   color: rgba(255,255,255,0.65);
-}
-
-.btn-premium {
-  width: 100%;
-  background: none;
-  border: 1px solid #8b5cf6;
-  color: #c4b5fd;
-  padding: 12px;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  margin-bottom: 16px;
-  transition: all 0.2s ease;
-}
-.btn-premium:hover {
-  background: rgba(139, 92, 246, 0.15);
 }
 
 .login-form {
@@ -506,6 +513,37 @@ function voltarParaLogin() {
   border-top: 1px solid rgba(255,255,255,0.1);
 }
 
+.login-premium-cta {
+  margin-bottom: 20px;
+}
+
+.login-premium-link {
+  width: 100%;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  border: none;
+  padding: 14px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: inherit;
+  pointer-events: all; /* Garante que este botão seja clicável */
+}
+
+.login-premium-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+}
+
+.login-premium-sub {
+  display: block;
+  margin-top: 8px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+}
+
 .login-card-footer p {
   font-size: 12px;
   color: rgba(255,255,255,0.55);
@@ -513,11 +551,6 @@ function voltarParaLogin() {
 
 .login-card-footer strong {
   color: rgba(255,255,255,0.8);
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
 }
 
 @keyframes slideUp {
@@ -529,6 +562,11 @@ function voltarParaLogin() {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @media (max-width: 768px) {
