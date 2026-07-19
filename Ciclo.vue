@@ -220,4 +220,3 @@ const {
   }
 }
 </style>
-</style>

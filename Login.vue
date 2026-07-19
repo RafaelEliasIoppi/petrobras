@@ -56,10 +56,14 @@ function voltarParaLogin() {
       </div>
       <div class="login-card">
         <div class="login-card-header">
-          <h2 v-if="!instrucaoPremium">Acessar Plataforma</h2>
-          <p v-if="!instrucaoPremium">Informe suas credenciais de acesso.</p>
-          <h2 v-else>Instruções para Acesso Premium</h2>
-          <p v-else>Após o pagamento, envie o comprovante para receber seu acesso.</p>
+          <template v-if="!instrucaoPremium">
+            <h2>Acessar Plataforma</h2>
+            <p>Informe suas credenciais de acesso.</p>
+          </template>
+          <template v-else>
+            <h2>Instruções para Acesso Premium</h2>
+            <p>Após o pagamento, envie o comprovante para receber seu acesso.</p>
+          </template>
         </div>
 
         <div v-if="instrucaoPremium" class="instrucao-premium">

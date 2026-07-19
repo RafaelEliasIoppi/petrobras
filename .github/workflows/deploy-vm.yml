@@ -25,20 +25,26 @@ jobs:
       - name: Copiar planos para dist
         run: cp -r petrobras-quimica-study-plan/planos dist/planos
 
+      - name: Instalar rsync
+        run: sudo apt-get update -q && sudo apt-get install -y rsync
+
       - name: Instalar chave SSH
+        env:
+          SSH_KEY: ${{ secrets.VM_SSH_KEY }}
         run: |
-          install -m 600 -D /dev/null ~/.ssh/id_rsa
-          echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/id_rsa
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H 163.176.163.213 >> ~/.ssh/known_hosts
 
       - name: Sincronizar dist/
-        run: rsync -avz --delete dist/ ubuntu@163.176.163.213:/opt/petrobras/dist/
+        run: rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no" dist/ ubuntu@163.176.163.213:/opt/petrobras/dist/
 
       - name: Sincronizar server.js
-        run: scp server.js ubuntu@163.176.163.213:/opt/petrobras/server.js
+        run: scp -o StrictHostKeyChecking=no server.js ubuntu@163.176.163.213:/opt/petrobras/server.js
 
       - name: Sincronizar planos/
-        run: rsync -avz --delete petrobras-quimica-study-plan/planos/ ubuntu@163.176.163.213:/opt/petrobras/planos/
+        run: rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no" petrobras-quimica-study-plan/planos/ ubuntu@163.176.163.213:/opt/petrobras/planos/
 
       - name: Reiniciar servico
-        run: ssh ubuntu@163.176.163.213 "sudo systemctl restart petrobras.service"
+        run: ssh -o StrictHostKeyChecking=no ubuntu@163.176.163.213 "sudo systemctl restart petrobras.service"
