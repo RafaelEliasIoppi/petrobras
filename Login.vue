@@ -4,6 +4,8 @@ import QRCode from 'qrcode';
 import { gerarPayloadPix } from './pix.js';
 import PasswordInput from './PasswordInput.vue';
 import PremiumCheckout from './PremiumCheckout.vue';
+import FaqSection from './FaqSection.vue';
+import HowItWorks from './HowItWorks.vue';
 
 const props = defineProps({
   erro: Boolean,
@@ -12,17 +14,8 @@ const emit = defineEmits(['tentativa-login']);
 
 const usuarioDigitado = ref('');
 const senhaDigitada = ref('');
-const mostrarSenhaCadastro = ref(false);
 const instrucaoPremium = ref(false);
 const qrCodeUrl = ref('');
-const modoCadastro = ref(false);
-const cadastroUsuario = ref('');
-const cadastroNome = ref('');
-const cadastroSenha = ref('');
-const cadastroConfirmar = ref('');
-const cadastroLoading = ref(false);
-const cadastroErro = ref('');
-const cadastroSucesso = ref('');
 
 const notificacao = ref(null);
 let notifTimer = null;
@@ -47,21 +40,21 @@ const depoimentos = [
     estrelas: 5,
   },
   {
-    nome: 'Juliana L.',
-    cidade: 'Rio de Janeiro, RJ',
-    texto: 'Já tinha feito 3 concursos sem passar. Sempre batia na trave nos específicos — Bloco II (soluções, eletroquímica, análise instrumental) era meu calcanhar de Aquiles. O ciclo de estudos organizou tudo por prioridade. 4 meses depois: aprovada para Técnica Química de Petróleo, regime administrativo. Minha filha vai usar o auxílio-ensino de R$ 1.750/mês.',
+    nome: 'Mariana C.',
+    cidade: 'Duque de Caxias, RJ',
+    texto: 'Sou mãe e trabalho o dia todo. Só tinha a noite para estudar. Os flashcards foram perfeitos para revisar no pouco tempo livre. O ciclo de estudos me mostrou onde focar minha energia. Passei para Técnica de Operação. Meu filho agora diz que quer trabalhar na Petrobras também. Isso não tem preço.',
     estrelas: 5,
   },
   {
-    nome: 'Pedro O.',
-    cidade: 'São Paulo, SP',
-    texto: 'Conciliei faculdade de engenharia química com os estudos pro concurso. A Cesgranrio não penaliza chute (múltipla escolha), então foquei em resolver questões. A plataforma me deu flexibilidade: flashcards no ônibus, simulados aos domingos. Passei em 2º lugar no meu polo, regime de embarque — R$ 17 mil líquido por mês. Minha família chorou quando soube.',
+    nome: 'Bruno P.',
+    cidade: 'Betim, MG',
+    texto: 'Sempre fui péssimo em matemática, que vale 20% da prova. Achei que não ia dar. As questões da plataforma, com explicação detalhada, me fizeram entender a lógica da Cesgranrio. Fui de 3 para 8 acertos nos simulados. Essa diferença me colocou dentro das vagas. Nunca imaginei que diria isso, mas até peguei gosto pelos cálculos.',
     estrelas: 5,
   },
   {
-    nome: 'Kelly C.',
-    cidade: 'Vitória, ES',
-    texto: 'Comprei o plano desconfiada. Me surpreendi: os simulados são muito próximos da prova Cesgranrio — múltipla escolha, 60 questões, 4h de duração. Cheguei no dia da prova já sabendo o estilo. Aprovada com 82% de aproveitamento. O edital de 2023 foi prorrogado até 2027, então minha vaga está garantida. Melhor R$ 49,90 que já investi.',
+    nome: 'Livia S.',
+    cidade: 'Cubatão, SP',
+    texto: 'Eu tinha todos os livros, mas estava completamente perdida, sem saber por onde começar. O ciclo de estudos da plataforma foi meu guia. Ele me dizia exatamente o que estudar a cada dia. Parei de perder tempo e meu rendimento decolou. Passei de primeira. Os R$ 49,90 me economizaram meses de estudo perdido.',
     estrelas: 5,
   },
 ];
@@ -117,50 +110,6 @@ onUnmounted(() => {
 
 function submeter() {
   emit('tentativa-login', usuarioDigitado.value.trim(), senhaDigitada.value.trim());
-}
-
-async function handleRegister() {
-  cadastroErro.value = '';
-  cadastroSucesso.value = '';
-  if (!cadastroUsuario.value.trim() || !cadastroNome.value.trim() || !cadastroSenha.value.trim()) {
-    cadastroErro.value = 'Todos os campos são obrigatórios.';
-    return;
-  }
-  if (cadastroUsuario.value.trim().length < 3) {
-    cadastroErro.value = 'Usuário deve ter no mínimo 3 caracteres.';
-    return;
-  }
-  if (cadastroSenha.value.length < 3) {
-    cadastroErro.value = 'Senha deve ter no mínimo 3 caracteres.';
-    return;
-  }
-  if (cadastroSenha.value !== cadastroConfirmar.value) {
-    cadastroErro.value = 'Senhas não conferem.';
-    return;
-  }
-  cadastroLoading.value = true;
-  try {
-    const r = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        usuario: cadastroUsuario.value.trim(),
-        nome: cadastroNome.value.trim(),
-        senha: cadastroSenha.value,
-      }),
-    });
-    const data = await r.json();
-    if (!r.ok) {
-      cadastroErro.value = data.erro || 'Erro ao cadastrar.';
-      return;
-    }
-    cadastroSucesso.value = 'Conta criada! Faça login.';
-    setTimeout(() => modoCadastro.value = false, 1500);
-  } catch {
-    cadastroErro.value = 'Erro de conexão com o servidor.';
-  } finally {
-    cadastroLoading.value = false;
-  }
 }
 
 function abrirLinkPremium() {
@@ -228,12 +177,7 @@ function voltarParaLogin() {
           <PremiumCheckout v-if="instrucaoPremium" :qrCode="qrCodeUrl" :onClose="voltarParaLogin" :onVoltar="voltarParaLogin" />
 
           <template v-else>
-            <div class="login-tabs">
-              <button class="login-tab" :class="{ active: !modoCadastro }" @click="modoCadastro = false">Entrar</button>
-              <button class="login-tab" :class="{ active: modoCadastro }" @click="modoCadastro = true">Criar Conta</button>
-            </div>
-
-            <form v-if="!modoCadastro" @submit.prevent="submeter" class="login-form">
+            <form @submit.prevent="submeter" class="login-form">
               <div class="input-group">
                 <label for="usuario">Usuário</label>
                 <input id="usuario" v-model="usuarioDigitado" type="text" placeholder="Seu nome de usuário" class="input-field" autofocus autocomplete="username" />
@@ -255,38 +199,6 @@ function voltarParaLogin() {
               <p v-if="props.erro" class="msg-erro">⚠ Usuário ou senha inválidos. Tente novamente.</p>
             </form>
 
-            <form v-else @submit.prevent="handleRegister" class="login-form">
-              <div class="input-group">
-                <label for="cad-usuario">Usuário</label>
-                <input id="cad-usuario" v-model="cadastroUsuario" type="text" placeholder="Escolha um usuário" class="input-field" autocomplete="username" />
-                <span class="input-icon">👤</span>
-              </div>
-              <div class="input-group">
-                <label for="cad-nome">Nome</label>
-                <input id="cad-nome" v-model="cadastroNome" type="text" placeholder="Seu nome completo" class="input-field" autocomplete="name" />
-                <span class="input-icon">📝</span>
-              </div>
-              <PasswordInput
-                id="cad-senha"
-                label="Senha"
-                v-model="cadastroSenha"
-                placeholder="Mínimo 3 caracteres"
-                autocomplete="new-password"
-              />
-              <PasswordInput
-                id="cad-confirmar"
-                label="Confirmar Senha"
-                v-model="cadastroConfirmar"
-                placeholder="Repita a senha"
-                autocomplete="new-password"
-              />
-              <button type="submit" class="btn-entrar" :disabled="cadastroLoading">
-                <span>{{ cadastroLoading ? 'Cadastrando...' : 'Criar Conta' }}</span>
-              </button>
-              <p v-if="cadastroErro" class="msg-erro">{{ cadastroErro }}</p>
-              <p v-if="cadastroSucesso" class="msg-sucesso">{{ cadastroSucesso }}</p>
-            </form>
-
             <div class="login-card-footer">
               <div class="login-premium-cta">
                 <button @click="abrirLinkPremium" class="login-premium-link">
@@ -298,6 +210,8 @@ function voltarParaLogin() {
             </div>
           </template>
         </div>
+
+        <HowItWorks />
 
         <div class="depoimentos-section">
           <div class="depoimentos-grid">
@@ -316,6 +230,8 @@ function voltarParaLogin() {
             </div>
           </div>
         </div>
+
+        <FaqSection />
       </div>
     </div>
   </div>
@@ -700,37 +616,6 @@ function voltarParaLogin() {
   border: 1px solid rgba(16,185,129,0.15);
 }
 
-.login-tabs {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 24px;
-  background: rgba(255,255,255,0.06);
-  border-radius: 10px;
-  padding: 4px;
-}
-
-.login-tab {
-  flex: 1;
-  padding: 12px 10px;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: rgba(255,255,255,0.6);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: inherit;
-}
-.login-tab.active {
-  background: rgba(255,255,255,0.12);
-  color: #fff;
-  font-weight: 600;
-}
-.login-tab:hover {
-  color: #fff;
-}
-
 .login-card-footer {
   margin-top: 24px;
   text-align: center;
@@ -955,10 +840,6 @@ function voltarParaLogin() {
     padding: 32px 24px;
   }
 
-  .login-tab {
-    padding: 14px 10px;
-  }
-
   .input-field {
     font-size: 16px;
   }
@@ -986,10 +867,6 @@ function voltarParaLogin() {
   .brand-subtitle {
     font-size: 14px;
     margin-bottom: 24px;
-  }
-  .login-tab {
-    padding: 14px 10px;
-    font-size: 15px;
   }
   .input-field {
     padding: 12px 14px 12px 40px;
@@ -1035,13 +912,6 @@ function voltarParaLogin() {
   .login-card {
     padding: 20px 14px;
     border-radius: 14px;
-  }
-  .login-tabs {
-    margin-bottom: 16px;
-  }
-  .login-tab {
-    padding: 15px 10px;
-    font-size: 16px;
   }
   .login-form {
     gap: 16px;
@@ -1115,10 +985,6 @@ function voltarParaLogin() {
   .login-card {
     padding: 16px 10px;
     border-radius: 12px;
-  }
-  .login-tab {
-    padding: 14px 8px;
-    font-size: 15px;
   }
   .login-form {
     gap: 12px;
