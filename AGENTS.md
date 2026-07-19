@@ -1,147 +1,184 @@
 # Memorias do Projeto - Estudo Petrobras
 
-## Visao Geral
-App para concurso Petrobras - Tecnico em Quimica. Duas implementacoes:
-- **Vue 3 + Vite** (raiz) — desenvolvimento, roteamento hash, singleton pattern
-- **Site estatico** (`petrobras-quimica-study-plan/site/`) — producao (servido por Express ou GitHub Pages)
-- Armazenamento localStorage com prefixo `petrobras_quimica_` + API REST `/api/dados/{nome}.json`
-- Remote: `git@github.com:RafaelEliasIoppi/petrobras.git` (SSH)
+## Arquitetura (para tomada de decisao)
 
-## Comandos
-- `npm run dev` — Vite dev server (porta 5173)
-- `npm run build` — Build Vite de producao
-- `npm start` — Backend Express (porta 3000, serve site/ + API)
-- `bash start.sh` — Auto-instala deps + sobe Express
-- `.\start.ps1` — Mata porta 3000, instala deps, sobe Express + abre browser
-
-## Estrutura
 ```
-/                                # Vue/Vite (root)
-├── App.vue, main.js, index.html, vite.config.js
-├── dados.js                     # CONTEUDOS, CICLO_ESTUDOS, metas, CICLO_MAP, mapCicloParaMateriaId
-├── armazenamento.js             # localStorage (prefixo petrobras_quimica_)
-├── usuarios.js                  # Autenticacao + gerarTokenSessao
-├── use*.js                      # Composables (Checklist, Horas, Ciclo, etc.)
-├── *.vue                        # Componentes (Dashboard, Ciclo, Diario, Relatorio, etc.)
-├── Login.vue                    # Tela de login com toggle senha (icone 🔒/👁)
-├── estilo.css                   # CSS global
-├── .github/workflows/deploy.yml # CI: build Vite → gh-pages
-├── start.ps1                    # Script PowerShell pra dev (npm run dev)
-├── server.js                    # Express (porta 3000, serve dist/ + API planos)
-├── deploy.ps1                   # Sincroniza build + server + planos pra VM
-│
-petrobras-quimica-study-plan/    # Dados + scripts servidor
-├── start.sh                     # Builda Vite + sobe Express (usado na VM)
-├── setup-vm.sh                  # Instala Node/Nginx/systemd na VM
-├── dados/                       # JSON files (persistencia servidor)
-└── planos/                      # Documentos .md
+Vue 3 + Vite (SPA hash routing) ──build──► dist/
+  │                                          │
+  ├── Login.vue ─── POST /api/auth/* ────────┤
+  ├── App.vue ───── GET /api/premium/status ─┤
+  ├── *.vue ─────── POST /api/visitas ───────┤
+  └── dados.js ──── (local state, no server) ┘
+                                              │
+Express server.js (porta 3000) ◄──────────────┘
+  ├── serve dist/ (static)
+  ├── GET /api/planos/*
+  ├── POST /api/auth/register (dados/usuarios.json)
+  ├── POST /api/mercadopago/preference
+  ├── GET /api/premium/status/:usuario
+  └── POST/GET /api/visitas (dados/visitas.json)
 ```
 
-## Seguranca - Sessao Unica
-- `localStorage` + `sessionStorage` com token aleatorio (`petro_quimica_sessao`)
-- Ao logar, salva `{ user, token, timestamp }` em ambos
-- `storage` event listener detecta login em outra aba → faz logout automatico
-- `verificarSessao()` restaura sessao do localStorage ao recarregar
+**Regra de ouro**: Toda feature que persiste dados precisa de 3 camadas:
+1. Estado reativo (cache)
+2. `localStorage` (`_salvarLocal()`)
+3. Servidor (`_putToServer()` com debounce 1s)
+Se pular uma delas, provavelmente é bug.
 
-## Conta Demo
-- Usuario `estudante` / senha `petro2026`
-- Recursos **bloqueados** com overlay marketing (👑 Versao Premium):
-  - Ciclo, Horas, Simulados, Erros, Diario, Relatorio, Questoes, Admin
-- Recursos **liberados**: Dashboard, Conteudos, Flashcards, Plano de Estudos
-- Overlay cobre a tela com backdrop blur, impede interacao/scroll
-- Sidebar mostra 🔒 nos itens bloqueados
-- Sidebar mostra badge `R$49,90` no item Premium se `!isPremium`
+## Orquestracao: Quando tomar cada acao
 
-## Persistencia (toda feature)
-1. **Cache** — estado reativo
-2. **localStorage** — `_salvarLocal()` com prefixo `petrobras_quimica_`
-3. **Servidor** — `_putToServer()` com debounce 1s
+**QUANDO** o usuario pedir algo sobre "conta", "cadastro", "login":
+→ Login.vue (modoCadastro toggle) + server.js (POST /api/auth/register)
+→ Validacoes: 3+ chars, senhas conferem, usuario unico
+→ NAO hash senha (MVP texto plano)
 
-## Responsividade
-- **Breakpoints**: 1024px, 768px, 600px, **480px**
-- 480px adicionado em: Login.vue, estilo.css, Diario.vue, Flashcards.vue, Erros.vue, Relatorio.vue, Ciclo.vue, Exercicios.vue, App.vue
-- **Checklist tabs**: em 480px viram scroll horizontal (`overflow-x: auto; flex-wrap: nowrap`)
-- **Login 480px**: brand escondido, card ocupa tela toda, depoimentos 1 coluna, social-notification sem `nowrap`
-- **Sidebar backdrop**: div `.sidebar-backdrop` em App.vue, visivel quando `menuAberta` em mobile, clica pra fechar
+**QUADNO** pedir "premium", "pagar", "comprar":
+→ PremiumCheckout.vue (componente unificado)
+→ Mercado Pago se logado, WhatsApp se nao
+→ Preco fixo R$ 49,90, chave PIX +5551983098650
 
-## CSS Global
-- `estilo.css` importado em `main.js` (`import './estilo.css'`) — essencial para o funcionamento do CSS interno
-- Sem essa importação, todas as páginas internas (Dashboard, Horas, etc.) ficam sem estilo
+**QUANDO** for tela nova:
+→ Criar .vue com scoped CSS (nunca inline styles)
+→ Adicionar rota no App.vue (hash #nomedarota)
+→ Sidebar item em App.vue
+→ Se precisar de dados, seguir padrao 3-camadas
+→ Responsivo nos 4 breakpoints (1024/768/600/480)
 
-## Login
-- `submeter()` em Login.vue chama `.trim()` no usuário e senha para ignorar espaços
-- Admin senha: `_[D1W)6hOO0h[R1/` (hash SHA-256: `a6035b25e8694b3ccef86d66b713e003340782642f8876a1a9fc738724eaa8e6`)
-- Se alterar hash do admin em usuarios.js, a funcao `carregarUsuarios()` detecta e força o update no localStorage
+**QUANDO** editar CSS de componente:
+→ Sempre `<style scoped>` — nunca inline ou global
+→ **Breakpoints obrigatorios nos 4 tamanhos**: 1024, 768, 600, 480 — SEMPRE verificar cada um
+→ Touch targets >= 44px em < 768px
+→ iOS: font-size >= 16px em inputs
+→ **REGRA DE OURO**: responsividade é PRIORIDADE #1. Nunca modificar CSS/HTML sem verificar os 4 breakpoints. Qualquer alteracao visual exige teste nos 4 tamanhos.
 
-## Premium Overlay (unificado)
-- **Login.vue**: fluxo PIX/QR inline no card (instrucaoPremium toggle)
-- **App.vue**: overlay modal com MESMO layout (PIX/QR + WhatsApp + Voltar)
-- Ambos usam `qrcode` lib + `gerarPayloadPix()` pra gerar QR Code
-- WhatsApp: `wa.me/5551983098650?text=...pagamento Premium (PIX)...`
-- Preco: R$ 49,90, chave PIX: +5551983098650
+**QUANDO** o server.js crashar na VM:
+→ `ssh -i ~/.ssh/saur_oracle ubuntu@163.176.163.213`
+→ Checar `journalctl -u petrobras.service -n 20`
+→ Se `ERR_MODULE_NOT_FOUND`: `npm install <pacote>`
+→ Se syntax error: server.js foi sobrescrito sem CI — copiar manual do repo
 
-## Admin - Dashboard de Visitas
-- Servidor: POST `/api/visitas` grava visita, GET `/api/visitas` retorna total/hoje/ultimas 100
-- Storage: `dados/visitas.json` no servidor
-- Client: `registrarVisita()` chamada no login + onMount no App.vue
-- Admin.vue exibe cards de total/hoje + tabela com usuario/data/hora
+**QUANDO** editar API endpoint:
+→ server.js tem rate-limit 200/15min no /api/ — testar com --rate limit nao vai bloquear dev
+→ Validar input em TODOS os POST (nunca confiar no client)
+→ Path traversal: usar `path.resolve` com `basePath` check
+→ Nao esquecer de `npm install express-rate-limit` se adicionar ao server.js (VM precisa)
 
-## Login Page Brand
-- Badge "🔥 Edital 2026" no topo
-- Destaque salarial: R$ 6.638 inicial, + benefícios, até R$ 11.300 com turno
-- 5 features focadas no concurso (conteúdo específico, flashcards, métricas, simulados Cesgranrio, caderno de erros)
-- Highlight box com vidro (glassmorphism) exibindo faixas salariais
+**QUANDO** deploy falhar:
+→ CI faz: build → gh-pages → rsync pra VM → restart petrobras.service
+→ Se rsync falhar: GH secrets VM_SSH_KEY, VM_HOST, VM_USER estao configuradas?
+→ Se restart falhar: servidor crashou — checar logs
+→ Fallback manual: `.\deploy.ps1` (precisa rsync local)
+
+## Acoplamento: O que quebra quando toco em X
+
+| Arquivo | Impacto | Sincronizar com |
+|---------|---------|-----------------|
+| `Login.vue` | Fluxo de auth, premium checkout, criar conta | `PremiumCheckout.vue`, `server.js`, `App.vue` (sidebar) |
+| `PremiumCheckout.vue` | Telas de login e premium overlay | `Login.vue`, `App.vue` |
+| `server.js` | Toda API (auth, premium, visitas, planos) | `dados/` diretorio na VM, `package.json` (deps) |
+| `estilo.css` | Todas as paginas internas | `main.js` (import obrigatorio) |
+| `.github/workflows/deploy.yml` | CI inteiro | Secrets do GitHub, VM systemd service |
+| `usuarios.js` | Autenticacao local + admin hash | `Login.vue`, `App.vue` |
+| `armazenamento.js` | Toda persistencia local | NENHUM outro arquivo — singleton puro |
+| `dados.js` | Conteudos, ciclo, materias | `use*.js` composables |
+
+## Diagnosticos Rapidos (sintoma → causa → conserto)
+
+**"login nao funciona / 401"**
+→ Admin hash mudou? `carregarUsuarios()` detecta e forca update
+→ Sessao expirou? Token tem 7-day TTL
+→ Outra aba? `storage` event faz logout automatico
+
+**"pagina sem estilo"**
+→ `estilo.css` nao importado em `main.js` — causa #1 de CSS quebrado
+→ Verificar se `import './estilo.css'` existe
+
+**"Property not defined on instance"**
+→ `ref()` criada no setup mas nao retornada no `return {}`
+
+**"Identifier 'server' has already been declared"**
+→ `const server` usado duas vezes em `armazenamento.js` — renomear segunda para `serverData`
+
+**"Popup bloqueado no login"**
+→ Usou `<a href>` em vez de `<button @click>` no footer premium
+
+**"Contador de visitantes zerado"**
+→ `Math.max(32, valor)` — nunca deixa mostrar abaixo de 32
+
+**"Express na VM crashou"**
+→ `ERR_MODULE_NOT_FOUND`: npm install faltando
+→ `npm install <pacote>` em /opt/petrobras/
+
+**"Ciclo nao expande 24 slots"**
+→ `CICLO_PONDERADO` expande por `peso`. `posicao` indexa com wrap. `concluido` usa `item-{idx}`
+
+**"Deploy.ps1 falha no Windows"**
+→ `$host` é reservado no PowerShell — usar `$vmHost`
+→ rsync nao existe no Windows — usar CI ou scp manual
+
+## Padroes de Codigo (nao inventar moda)
+
+**Componente Vue novo**:
+```vue
+<script setup>
+import { ref, ... } from 'vue'
+// estado, funcoes
+</script>
+<template>
+  <div class="nome-componente">
+    ...
+  </div>
+</template>
+<style scoped>
+.nome-componente { ... }
+/* breakpoints: 1024, 768, 600, 480 */
+</style>
+```
+
+**CSS**:
+- Nunca inline styles
+- Scoped sempre
+- Variaveis CSS do :root (nao hardcoded colors)
+- Glassmorphism: `rgba(255,255,255,0.05)` + `backdrop-filter`
+- Focus apenas com `:focus-visible` (nao `:focus`)
+- Touch targets >= 44px em <768px
+- Inputs com `font-size: 16px` (iOS)
+
+**Eventos de teclado**:
+- `@keydown.escape` para fechar modais/overlays
+- `@keydown.enter` para submeter formularios
+- `confirm()` antes de delete/reset
+
+**Navegacao entre telas**:
+- Usar `window.dispatchEvent(new CustomEvent('navegar'))`
+- NAO usar `window.location.hash = view`
+
+**Seguranca server.js**:
+- Todo POST: validar tipo, tamanho, campos obrigatorios
+- Path: `path.resolve` + check `basePath` prefix
+- CSP + HSTS via helmet
+- Nao confiar em nada do client
+
+## VM (so com permissao explicita)
+
+- Host: `163.176.163.213`
+- User: `ubuntu`
+- Key: `~/.ssh/saur_oracle`
+- Path: `/opt/petrobras/`
+- Service: `petrobras.service` (systemd, node server.js)
+- Logs: `journalctl -u petrobras.service -n 20`
+- PWD no servidor: `/opt/petrobras/`
+- NAO tem git — deploy via rsync/scp ou CI
+- Se CI falhar, copiar manual: scp dist/ server.js planos/ → restart
 
 ## Memorias Fixas (nao errar de novo)
-- **🚨 NUNCA editar/configurar VM ou servidor em producao sem permissao explicita do usuario.** Nao mexer em nginx, systemd, firewall, portas, SSL, ou qualquer configuracao de infraestrutura. Se achar algo "errado", perguntar primeiro. Usar SEMPRE o `deploy.ps1` para atualizar a VM — e somente depois de commit+push.
-- **Site estatico** (`site/index.html`): SEMPRE incluir `<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>` ANTES dos scripts locais (dados.js, armazenamento.js, app.js). A versao Vite (raiz) nao precisa, mas o site estatico sim.
-- **Cache busting**: ao alterar CSS/JS, atualizar `?v=` nos links. Usar data + letra (ex: `20260718a`).
-- **Variáveis Vue no template**: qualquer `ref()` criada em app.js precisa estar no `return {}` do `setup()`, senao dá `Property not defined on instance`.
-- **armazenamento.js**: nao usar `const server` duas vezes no mesmo escopo (erro `Identifier 'server' has already been declared`). Renomear para `serverData` na segunda.
-- **Depoimentos**: usar glassmorphism (`rgba(255,255,255,0.05)`, `backdrop-filter`) no lugar de `var(--card)` pra fundo escuro. Exibir `cidade` junto com `nome`.
-- **Contador visitantes**: sempre aplicar `Math.max(32, valor)` pra nunca ficar abaixo de 32. Usar `requestAnimationFrame` pra animacao suave.
-- **Comprar Premium**: se `usuarioAtual` for null (tela de login), redirecionar pra WhatsApp. Se logado, criar preference no Mercado Pago.
-- **Login footer**: usar `<button @click>` em vez de `<a href>` pra evitar popup blocker e garantir que o clique sempre dispare acao.
-- **Ciclo de Estudos**: `CICLO_PONDERADO` expande por `peso` (total 24 slots). `posicao` indexa nos 24, wrap no fim. `concluido` usa `item-{idx}` com contador.
 
-## Telas
-| Rota | Arquivo | Proposito |
-|------|---------|-----------|
-| `#dashboard` | Dashboard.vue | Visao geral |
-| `#checklist` | Checklist.vue | Topicos do edital |
-| `#ciclo` | Ciclo.vue | Ciclo de estudos (ponderado) |
-| `#horas` | Horas.vue | Grade de horas |
-| `#simulados` | Simulados.vue | Desempenho |
-| `#erros` | Erros.vue | Caderno de erros |
-| `#diario` | Diario.vue | Registro do Dia + Revisoes |
-| `#relatorio` | Relatorio.vue | Analise de produtividade |
-| `#plano` | Plano.vue | Documentos |
-| `#cronograma` | Cronograma.vue / cronograma in site/ | Cronograma semanal interativo |
-| `#flashcards` | Flashcards.vue | Revisao com flashcards |
-| `#premium` | index.html/app.js | Tela de compra Premium 👑 |
-
-## Login e Cadastro
-- **Abas "Entrar" / "Criar Conta"** no formulário de login (alterna `modoCadastro`)
-- `handleRegister()` envia POST `/api/auth/register` → salva em `dados/usuarios.json`
-- `handleLogin()` melhorado: chama `autenticar()` + `verificarPremium()` após login
-- Senhas em texto plano (MVP), podem ser hashadas depois
-
-## Premium / Pagamento
-- **Preço**: R$ 49,90 (pagamento único, acesso vitalício)
-- **Gateway**: Mercado Pago (`mercadopago` SDK)
-- `comprarPremium()` → POST `/api/mercadopago/preference` → redireciona ao checkout MP
-- Webhook `/api/mercadopago/webhook` atualiza `dados/premium.json`
-- `verificarPremium()` → GET `/api/premium/status/:usuario` → libera recursos
-- Sidebar mostra badge `R$49,90` se `!isPremium`
-- Premium libera: Ciclo, Horas, Simulados, Erros, Diario, Relatorio, Questoes, Admin
-
-## Provas Sociais
-- `notificacoes` — notificações flutuantes estilo "João acabou de comprar o Premium!"
-- `iniciarSocialProof()` — intervalo aleatório 4-8s, notificação some após 5s
-- `depoimentos` — array de 10 depoimentos com nome, avatar, texto e estrelas
-- Exibidos na tela de login (grade 4 cards) e na página Premium (grade completa)
-
-## CI/CD
-- `.github/workflows/deploy.yml` — push no main → copia site/ → deploy no gh-pages
-- URL: https://rafaeleliasioppi.github.io/petrobras/
-- Persistencia no Pages funciona via localStorage apenas (fallback offline)
+- **🚨 VM**: nunca mexer em nginx, systemd, firewall, portas, SSL sem permissao. Nao tem git la — deploy via CI ou scp manual.
+- **CI**: .github/workflows/deploy.yml faz build + gh-pages + VM. Se adicionar dep npm no server, VM precisa `npm install`.
+- **site/index.html**: `<script src="cdn/vue@3">` ANTES dos scripts locais. Vite root nao precisa.
+- **Cache busting CSS/JS**: `?v=YYYYMMDDa`
+- **PowerShell**: `$host` é reservado — usar `$vmHost`
+- **armazenamento.js**: `const server` apenas 1 vez — segunda vira `serverData`
+- **Dashboard contador**: `Math.max(32, valor)`, animar com `requestAnimationFrame`
+- **Login footer**: `<button @click>`, nunca `<a href>`
+- **Depoimentos**: glassmorphism, exibir `cidade`

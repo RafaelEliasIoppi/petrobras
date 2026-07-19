@@ -733,7 +733,7 @@ function voltarParaLogin() {
 
 .login-tab {
   flex: 1;
-  padding: 10px;
+  padding: 12px 10px;
   border: none;
   border-radius: 8px;
   background: transparent;
@@ -983,9 +983,13 @@ function voltarParaLogin() {
     font-size: 14px;
     margin-bottom: 24px;
   }
+  .login-tab {
+    padding: 14px 10px;
+    font-size: 15px;
+  }
   .input-field {
     padding: 12px 14px 12px 40px;
-    font-size: 14px;
+    font-size: 16px;
   }
   .olho-senha {
     right: 6px;
@@ -997,8 +1001,8 @@ function voltarParaLogin() {
     height: 17px;
   }
   .btn-entrar {
-    padding: 12px;
-    font-size: 15px;
+    padding: 14px 12px;
+    font-size: 16px;
   }
 }
 
@@ -1020,6 +1024,13 @@ function voltarParaLogin() {
     padding: 20px 14px;
     border-radius: 14px;
   }
+  .login-tabs {
+    margin-bottom: 16px;
+  }
+  .login-tab {
+    padding: 15px 10px;
+    font-size: 16px;
+  }
   .login-card-header {
     margin-bottom: 24px;
   }
@@ -1030,35 +1041,39 @@ function voltarParaLogin() {
     font-size: 13px;
   }
   .input-field {
-    padding: 11px 12px 11px 38px;
-    font-size: 14px;
+    padding: 12px 12px 12px 38px;
+    font-size: 16px;
   }
   .input-icon {
-    bottom: 12px;
+    bottom: 13px;
     left: 12px;
   }
   .olho-senha {
     right: 4px;
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
   }
   .olho-icon {
-    width: 16px;
-    height: 16px;
+    width: 17px;
+    height: 17px;
   }
   .btn-entrar {
-    padding: 11px;
-    font-size: 14px;
+    padding: 14px 12px;
+    font-size: 16px;
+  }
+  .msg-erro, .msg-sucesso {
+    font-size: 12px;
+    padding: 8px 12px;
   }
   .login-premium-link {
-    padding: 12px;
-    font-size: 14px;
+    padding: 14px 12px;
+    font-size: 16px;
   }
   .login-premium-sub {
-    font-size: 10px;
+    font-size: 11px;
   }
   .login-card-footer p {
-    font-size: 11px;
+    font-size: 12px;
   }
   .pix-qr {
     width: 160px;
