@@ -353,12 +353,19 @@ function voltarParaLogin() {
 .login-wrapper {
   position: relative;
   min-height: 100vh;
+  min-height: -webkit-fill-available;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow-x: hidden;
   background: #0a0c14;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+@supports (min-height: 100dvh) {
+  .login-wrapper {
+    min-height: 100dvh;
+  }
 }
 
 .login-bg {
@@ -1042,8 +1049,10 @@ function voltarParaLogin() {
     padding: 10px;
     gap: 16px;
     min-height: 100vh;
+    min-height: -webkit-fill-available;
     justify-content: flex-start;
     padding-top: 20px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   }
   .login-brand {
     display: none;
@@ -1117,8 +1126,62 @@ function voltarParaLogin() {
   .depoimento-texto {
     font-size: 13px;
   }
+  .depoimentos-section {
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
   .bg-shape-1 { width: 200px; height: 200px; }
   .bg-shape-2 { width: 140px; height: 140px; }
   .bg-shape-3 { width: 100px; height: 100px; }
+}
+
+@media (max-width: 360px) {
+  .login-container {
+    padding: 6px;
+    gap: 12px;
+    padding-top: 12px;
+  }
+  .login-card {
+    padding: 16px 10px;
+    border-radius: 12px;
+  }
+  .login-tab {
+    padding: 14px 8px;
+    font-size: 15px;
+  }
+  .login-form {
+    gap: 12px;
+  }
+  .input-field {
+    padding: 11px 10px 11px 34px;
+    font-size: 16px;
+  }
+  .input-icon {
+    left: 10px;
+    bottom: 12px;
+    font-size: 16px;
+  }
+  .olho-senha {
+    right: 2px;
+    width: 30px;
+    height: 30px;
+  }
+  .olho-icon {
+    width: 15px;
+    height: 15px;
+  }
+  .btn-entrar {
+    padding: 13px 10px;
+    font-size: 16px;
+  }
+  .login-premium-link {
+    padding: 13px 10px;
+    font-size: 15px;
+  }
+  .depoimento-card {
+    padding: 12px;
+  }
+  .depoimento-texto {
+    font-size: 12px;
+  }
 }
 </style>

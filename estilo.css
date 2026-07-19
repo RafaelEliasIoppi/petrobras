@@ -30,10 +30,21 @@ body {
   color: var(--texto);
   display: flex;
   min-height: 100vh;
+  min-height: -webkit-fill-available;
 }
 
 #app {
   width: 100%;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  display: flex;
+  flex-direction: column;
+}
+
+@supports (min-height: 100dvh) {
+  body, #app {
+    min-height: 100dvh;
+  }
 }
 
 .sidebar {
