@@ -171,6 +171,13 @@ import { ref, ... } from 'vue'
 - NAO tem git — deploy via rsync/scp ou CI
 - Se CI falhar, copiar manual: scp dist/ server.js planos/ → restart
 
+## QR Code PIX
+
+- **`pix.js`** gera payload PIX BR Code (EMV padrão).
+- **TXID**: usar `addField('05', txid)` — NUNCA `addField('05', addField('03', txid))`. O `03` extra invalida o QR Code (bancos rejeitam).
+- **Chave PIX**: `+5551983098650` (com `+`). Se banco rejeitar, remover o `+`.
+- **Payload**: gerado em `Login.vue` via `gerarPayloadPix()`, convertido pra imagem com `qrcode` lib, exibido em `PremiumCheckout.vue`.
+
 ## Memorias Fixas (nao errar de novo)
 
 - **🚨 VM**: nunca mexer em nginx, systemd, firewall, portas, SSL sem permissao. Nao tem git la — deploy via CI ou scp manual.
@@ -183,3 +190,4 @@ import { ref, ... } from 'vue'
 - **Dashboard contador**: `Math.max(32, valor)`, animar com `requestAnimationFrame`
 - **Login footer**: `<button @click>`, nunca `<a href>`
 - **Depoimentos**: glassmorphism, exibir `cidade`
+- **PIX TXID**: `addField('05', txid)` — sem `03` aninhado. Bancos rejeitam payload com `03` extra.

@@ -33,7 +33,7 @@ export function gerarPayloadPix({ chave, nome, cidade, valor, txid = '***' }) {
   const country = addField('58', 'BR');
   const merchantName = addField('59', nome.substring(0, 25));
   const merchantCity = addField('60', cidade.substring(0, 15));
-  const txidField = addField('05', addField('03', txid));
+  const txidField = addField('05', txid);
   const additionalData = addField('62', txidField);
   const payloadSemCRC =
     addField('00', '01') +
