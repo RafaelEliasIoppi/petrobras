@@ -2,12 +2,22 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import rateLimit from 'express-rate-limit';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const port = 3000;
+
+app.set('trust proxy', 1);
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  message: { erro: 'Muitas requisições. Tente novamente em alguns minutos.' }
+});
+app.use('/api/', limiter);
 
 app.use((req, res, next) => {
   res.setHeader('Content-Security-Policy', "default-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self';");
@@ -47,8 +57,8 @@ function salvarVisitas(data) {
 
 app.post('/api/visitas', (req, res) => {
   const { usuario } = req.body;
-  if (!usuario) return res.status(400).json({ erro: 'usuario é obrigatório' });
-  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || 'desconhecido';
+  if (!usuario || typeof usuario !== 'string' || usuario.length > 50) return res.status(400).json({ erro: 'usuario inválido' });
+  const ip = req.ip || 'desconhecido';
   const visitas = lerVisitas();
   visitas.push({
     usuario,
@@ -111,6 +121,11 @@ app.get(/^\/api\/plano\/(.+)$/, (req, res) => {
 
 app.get(/^(?!\/api).*/, (req, res) => {
   res.sendFile(path.join(frontendDistPath, 'index.html'));
+});
+
+app.use((err, req, res, next) => {
+  console.error('Erro no servidor:', err);
+  res.status(500).json({ erro: 'Erro interno do servidor' });
 });
 
 app.listen(port, () => {

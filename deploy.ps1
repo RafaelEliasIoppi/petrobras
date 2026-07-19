@@ -1,7 +1,7 @@
 param(
-  [string]$Hostname = "163.176.163.213",
-  [string]$User = "ubuntu",
-  [string]$Key = "$env:USERPROFILE\.ssh\saur_oracle",
+  [string]$Hostname = $(if ($env:DEPLOY_HOST) { $env:DEPLOY_HOST } else { "163.176.163.213" }),
+  [string]$User = $(if ($env:DEPLOY_USER) { $env:DEPLOY_USER } else { "ubuntu" }),
+  [string]$Key = $(if ($env:DEPLOY_KEY) { $env:DEPLOY_KEY } else { "$env:USERPROFILE\.ssh\saur_oracle" }),
   [string]$RemotePath = "/opt/petrobras",
   [switch]$Build,
   [switch]$SkipRestart
