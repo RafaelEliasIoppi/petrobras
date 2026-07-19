@@ -155,6 +155,7 @@ function verificarSessao() {
 onMounted(async () => {
   document.documentElement.dataset.tema = tema.value;
   window.addEventListener('hashchange', navegarHash);
+  window.addEventListener('navegar', (e) => { if (e.detail) irPara(e.detail); });
   window.addEventListener('storage', (e) => {
     if (e.key === SESSAO_KEY) verificarSessao();
   });

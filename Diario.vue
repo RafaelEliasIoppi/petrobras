@@ -19,7 +19,7 @@ const {
 const hoje = new Date().toISOString().slice(0, 10);
 
 function navegarPara(view) {
-  window.location.hash = view;
+  window.dispatchEvent(new CustomEvent('navegar', { detail: view }));
 }
 
 const materiasVisiveis = CONTEUDOS;
@@ -236,13 +236,13 @@ function formatarHoras(h) {
   gap: 2px;
 }
 .btn-ajuste {
-  width: 26px;
-  height: 26px;
+  width: 36px;
+  height: 36px;
   border: 1px solid var(--borda);
-  border-radius: 4px;
+  border-radius: 6px;
   background: var(--card);
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--texto);
   display: flex;
@@ -527,11 +527,19 @@ function formatarHoras(h) {
 }
 
 @media (max-width: 480px) {
+  .btn-ajuste {
+    width: 44px;
+    height: 44px;
+  }
+  .btn-concluir {
+    padding: 12px;
+    min-height: 44px;
+  }
   .grade-materias {
     grid-template-columns: 1fr 1fr;
     gap: 6px;
   }
-  .btn-materia {
+  .materia-card {
     padding: 8px 6px;
     font-size: 11px;
   }
