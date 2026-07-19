@@ -47,9 +47,11 @@ function salvarVisitas(data) {
 app.post('/api/visitas', (req, res) => {
   const { usuario } = req.body;
   if (!usuario) return res.status(400).json({ erro: 'usuario é obrigatório' });
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || 'desconhecido';
   const visitas = lerVisitas();
   visitas.push({
     usuario,
+    ip,
     data: new Date().toISOString().split('T')[0],
     hora: new Date().toTimeString().split(' ')[0],
     timestamp: Date.now()

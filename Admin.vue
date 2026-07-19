@@ -132,6 +132,7 @@ const tituloForm = computed(() => editandoExistente.value ? 'Editar Usuário' : 
           <thead>
             <tr>
               <th style="padding:8px 10px;text-align:left;font-weight:600;color:var(--texto-sec);border-bottom:1px solid var(--borda);">Usuário</th>
+              <th style="padding:8px 10px;text-align:left;font-weight:600;color:var(--texto-sec);border-bottom:1px solid var(--borda);">IP</th>
               <th style="padding:8px 10px;text-align:left;font-weight:600;color:var(--texto-sec);border-bottom:1px solid var(--borda);">Data</th>
               <th style="padding:8px 10px;text-align:left;font-weight:600;color:var(--texto-sec);border-bottom:1px solid var(--borda);">Hora</th>
             </tr>
@@ -139,6 +140,7 @@ const tituloForm = computed(() => editandoExistente.value ? 'Editar Usuário' : 
           <tbody>
             <tr v-for="v in visitas" :key="v.timestamp">
               <td style="padding:8px 10px;border-bottom:1px solid var(--borda);">{{ v.usuario }}</td>
+              <td style="padding:8px 10px;border-bottom:1px solid var(--borda);font-family:monospace;font-size:12px;">{{ v.ip || '-' }}</td>
               <td style="padding:8px 10px;border-bottom:1px solid var(--borda);">{{ v.data }}</td>
               <td style="padding:8px 10px;border-bottom:1px solid var(--borda);">{{ v.hora }}</td>
             </tr>
