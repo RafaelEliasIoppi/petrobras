@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import QRCode from 'qrcode';
 import { gerarPayloadPix } from './pix.js';
 
@@ -14,6 +14,72 @@ const senhaDigitada = ref('');
 const mostrarSenha = ref(false);
 const instrucaoPremium = ref(false);
 const qrCodeUrl = ref('');
+
+const notificacao = ref(null);
+let notifTimer = null;
+
+const depoimentos = [
+  {
+    nome: 'Carlos M.',
+    cidade: 'Macaé, RJ',
+    texto: 'Estudava 2h por dia depois do trabalho no turno 12x36. Minha maior dificuldade era o Bloco I — orgânica e eletromagnetismo. O ciclo ponderado organizou os estudos por peso de matéria. Em 3 meses fui de 38% para 82% nos simulados. Passei em 12º para Técnico Químico de Petróleo. Hoje tiro R$ 14 mil líquido por mês.',
+    estrelas: 5,
+  },
+  {
+    nome: 'Ana J.',
+    cidade: 'Salvador, BA',
+    texto: 'Reações orgânicas era meu pesadelo. Com 40 questões de específicas e 60% do peso na prova, não dava pra errar. Os flashcards com revisão espaçada foram meu divisor de águas — repetia as reações todo dia no ônibus. Na prova, caiu exatamente o que mais revisei. Aprovada em 6º lugar. PLR de R$ 52 mil no primeiro ano.',
+    estrelas: 5,
+  },
+  {
+    nome: 'Rafael S.',
+    cidade: 'Belo Horizonte, MG',
+    texto: 'O relatório de horas mostrou: eu estudava 3h por dia mas só 45min era produtivo. Ajustei minha rotina com base nos dados da plataforma. Português e Matemática são 40% da prova — gabaritei as duas. Isso fez toda diferença na classificação. Passei pra Química de Petróleo. Salário base R$ 6.636, com benefícios passa de R$ 10 mil.',
+    estrelas: 5,
+  },
+  {
+    nome: 'Juliana L.',
+    cidade: 'Rio de Janeiro, RJ',
+    texto: 'Já tinha feito 3 concursos sem passar. Sempre batia na trave nos específicos — Bloco II (soluções, eletroquímica, análise instrumental) era meu calcanhar de Aquiles. O ciclo de estudos organizou tudo por prioridade. 4 meses depois: aprovada para Técnica Química de Petróleo, regime administrativo. Minha filha vai usar o auxílio-ensino de R$ 1.750/mês.',
+    estrelas: 5,
+  },
+  {
+    nome: 'Pedro O.',
+    cidade: 'São Paulo, SP',
+    texto: 'Conciliei faculdade de engenharia química com os estudos pro concurso. A Cesgranrio não penaliza chute (múltipla escolha), então foquei em resolver questões. A plataforma me deu flexibilidade: flashcards no ônibus, simulados aos domingos. Passei em 2º lugar no meu polo, regime de embarque — R$ 17 mil líquido por mês. Minha família chorou quando soube.',
+    estrelas: 5,
+  },
+  {
+    nome: 'Kelly C.',
+    cidade: 'Vitória, ES',
+    texto: 'Comprei o plano desconfiada. Me surpreendi: os simulados são muito próximos da prova Cesgranrio — múltipla escolha, 60 questões, 4h de duração. Cheguei no dia da prova já sabendo o estilo. Aprovada com 82% de aproveitamento. O edital de 2023 foi prorrogado até 2027, então minha vaga está garantida. Melhor R$ 49,90 que já investi.',
+    estrelas: 5,
+  },
+];
+
+const notificacoes = [
+  { nome: 'João V.', cidade: 'Santos, SP' },
+  { nome: 'Marina F.', cidade: 'Niterói, RJ' },
+  { nome: 'Lucas A.', cidade: 'Campinas, SP' },
+  { nome: 'Fernanda R.', cidade: 'Recife, PE' },
+  { nome: 'Gabriel S.', cidade: 'Brasília, DF' },
+  { nome: 'Camila T.', cidade: 'Curitiba, PR' },
+  { nome: 'Thiago M.', cidade: 'Manaus, AM' },
+  { nome: 'Patrícia N.', cidade: 'Porto Alegre, RS' },
+];
+let notifInterval = null;
+
+function mostrarNotificacao() {
+  const item = notificacoes[Math.floor(Math.random() * notificacoes.length)];
+  notificacao.value = `${item.nome} (${item.cidade}) acabou de adquirir o Premium!`;
+  if (notifTimer) clearTimeout(notifTimer);
+  notifTimer = setTimeout(() => { notificacao.value = null; }, 5000);
+}
+
+function iniciarSocialProof() {
+  mostrarNotificacao();
+  notifInterval = setInterval(mostrarNotificacao, 4000 + Math.random() * 4000);
+}
 
 const PIX_KEY = '+5551983098650';
 const PIX_NOME = 'PETROBRAS ACADEMY';
@@ -32,6 +98,12 @@ onMounted(async () => {
     margin: 2,
     color: { dark: '#1a1a2e', light: '#ffffff' },
   });
+  iniciarSocialProof();
+});
+
+onUnmounted(() => {
+  if (notifInterval) clearInterval(notifInterval);
+  if (notifTimer) clearTimeout(notifTimer);
 });
 
 function submeter() {
@@ -165,8 +237,33 @@ function voltarParaLogin() {
           <p>Conta de demonstração: <strong>estudante</strong> / <strong>petro2026</strong></p>
         </div>
       </div>
+
+      <div class="depoimentos-section">
+        <div class="depoimentos-grid">
+          <div v-for="(d, i) in depoimentos.slice(0, 4)" :key="i" class="depoimento-card">
+            <div class="depoimento-stars">
+              <svg v-for="s in d.estrelas" :key="s" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </div>
+            <p class="depoimento-texto">"{{ d.texto }}"</p>
+            <div class="depoimento-footer">
+              <div class="depoimento-avatar">{{ d.nome.charAt(0) }}</div>
+              <div class="depoimento-info">
+                <strong>{{ d.nome }}</strong>
+                <span>{{ d.cidade }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
+
+  <transition name="notif">
+    <div v-if="notificacao" class="social-notification">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <span>{{ notificacao }}</span>
+    </div>
+  </transition>
 </template>
 
 <style scoped>
@@ -671,6 +768,126 @@ function voltarParaLogin() {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+.depoimentos-section {
+  width: 100%;
+  max-width: 780px;
+}
+
+.depoimentos-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.depoimento-card {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 18px;
+  transition: all 0.3s ease;
+  animation: slideUp 0.6s ease-out both;
+}
+
+.depoimento-card:nth-child(1) { animation-delay: 0.1s; }
+.depoimento-card:nth-child(2) { animation-delay: 0.2s; }
+.depoimento-card:nth-child(3) { animation-delay: 0.3s; }
+.depoimento-card:nth-child(4) { animation-delay: 0.4s; }
+
+.depoimento-card:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.15);
+  transform: translateY(-2px);
+}
+
+.depoimento-stars {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+
+.depoimento-texto {
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 14px;
+  font-style: italic;
+}
+
+.depoimento-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.depoimento-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(99,102,241,0.5), rgba(37,99,235,0.5));
+  border: 1px solid rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.depoimento-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.depoimento-info strong {
+  font-size: 13px;
+  color: rgba(255,255,255,0.85);
+}
+
+.depoimento-info span {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+}
+
+.social-notification {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(16,185,129,0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 1000;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  white-space: nowrap;
+}
+
+.notif-enter-active {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.notif-leave-active {
+  transition: all 0.3s ease;
+}
+.notif-enter-from {
+  opacity: 0;
+  transform: translateX(-50%) translateY(20px);
+}
+.notif-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px);
 }
 
 @media (max-width: 768px) {
