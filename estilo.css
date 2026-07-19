@@ -37,6 +37,7 @@ body {
   width: 100%;
   min-height: 100vh;
   min-height: -webkit-fill-available;
+  overflow-y: auto; /* Adicionado para permitir rolagem vertical do conteúdo principal */
   display: flex;
   flex-direction: column;
 }
@@ -160,8 +161,8 @@ body {
 }
 
 .checklist-tab {
-  flex: 1;
-  min-width: 0;
+  flex: 0 1 auto; /* Alterado para não forçar o crescimento e permitir quebra de linha correta */
+  /* min-width: 0; Removido para evitar que o item encolha demais */
   padding: 10px 16px;
   border: none;
   border-radius: 8px;
