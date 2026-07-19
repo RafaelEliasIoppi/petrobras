@@ -93,6 +93,7 @@ petrobras-quimica-study-plan/    # Dados + scripts servidor
 - Highlight box com vidro (glassmorphism) exibindo faixas salariais
 
 ## Memorias Fixas (nao errar de novo)
+- **🚨 NUNCA editar/configurar VM ou servidor em producao sem permissao explicita do usuario.** Nao mexer em nginx, systemd, firewall, portas, SSL, ou qualquer configuracao de infraestrutura. Se achar algo "errado", perguntar primeiro. Usar SEMPRE o `deploy.ps1` para atualizar a VM — e somente depois de commit+push.
 - **Site estatico** (`site/index.html`): SEMPRE incluir `<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>` ANTES dos scripts locais (dados.js, armazenamento.js, app.js). A versao Vite (raiz) nao precisa, mas o site estatico sim.
 - **Cache busting**: ao alterar CSS/JS, atualizar `?v=` nos links. Usar data + letra (ex: `20260718a`).
 - **Variáveis Vue no template**: qualquer `ref()` criada em app.js precisa estar no `return {}` do `setup()`, senao dá `Property not defined on instance`.

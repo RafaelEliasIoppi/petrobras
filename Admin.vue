@@ -127,58 +127,62 @@ const tituloForm = computed(() => editandoExistente.value ? 'Editar Usuário' : 
 
     <div class="card">
       <div class="card-titulo">📊 Últimas Visitas</div>
-      <table style="width:100%;border-collapse:collapse;font-size:13px;">
-        <thead>
-          <tr>
-            <th style="padding:8px 10px;text-align:left;font-weight:600;color:var(--texto-sec);border-bottom:1px solid var(--borda);">Usuário</th>
-            <th style="padding:8px 10px;text-align:left;font-weight:600;color:var(--texto-sec);border-bottom:1px solid var(--borda);">Data</th>
-            <th style="padding:8px 10px;text-align:left;font-weight:600;color:var(--texto-sec);border-bottom:1px solid var(--borda);">Hora</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="v in visitas" :key="v.timestamp">
-            <td style="padding:8px 10px;border-bottom:1px solid var(--borda);">{{ v.usuario }}</td>
-            <td style="padding:8px 10px;border-bottom:1px solid var(--borda);">{{ v.data }}</td>
-            <td style="padding:8px 10px;border-bottom:1px solid var(--borda);">{{ v.hora }}</td>
-          </tr>
-          <tr v-if="visitas.length === 0">
-            <td colspan="3" style="padding:20px;text-align:center;color:var(--texto-sec);">Nenhuma visita registrada ainda.</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="tabela-wrapper">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr>
+              <th style="padding:8px 10px;text-align:left;font-weight:600;color:var(--texto-sec);border-bottom:1px solid var(--borda);">Usuário</th>
+              <th style="padding:8px 10px;text-align:left;font-weight:600;color:var(--texto-sec);border-bottom:1px solid var(--borda);">Data</th>
+              <th style="padding:8px 10px;text-align:left;font-weight:600;color:var(--texto-sec);border-bottom:1px solid var(--borda);">Hora</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="v in visitas" :key="v.timestamp">
+              <td style="padding:8px 10px;border-bottom:1px solid var(--borda);">{{ v.usuario }}</td>
+              <td style="padding:8px 10px;border-bottom:1px solid var(--borda);">{{ v.data }}</td>
+              <td style="padding:8px 10px;border-bottom:1px solid var(--borda);">{{ v.hora }}</td>
+            </tr>
+            <tr v-if="visitas.length === 0">
+              <td colspan="3" style="padding:20px;text-align:center;color:var(--texto-sec);">Nenhuma visita registrada ainda.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <div class="card">
       <div class="card-titulo">
         <span>Usuários Cadastrados</span>
-        <button v-if="!editando" @click="handleNovo" style="padding:6px 14px;background:var(--primaria);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-family:inherit;">+ Novo Usuário</button>
+        <button v-if="!editando" @click="handleNovo" class="btn-novo-usuario">+ Novo Usuário</button>
       </div>
-      <table style="width:100%;border-collapse:collapse;font-size:14px;">
-        <thead>
-          <tr>
-            <th style="padding:10px 12px;text-align:left;font-weight:600;color:var(--texto-sec);font-size:13px;border-bottom:1px solid var(--borda);">Usuário</th>
-            <th style="padding:10px 12px;text-align:left;font-weight:600;color:var(--texto-sec);font-size:13px;border-bottom:1px solid var(--borda);">Nome</th>
-            <th style="padding:10px 12px;text-align:left;font-weight:600;color:var(--texto-sec);font-size:13px;border-bottom:1px solid var(--borda);">Role</th>
-            <th style="padding:10px 12px;text-align:left;font-weight:600;color:var(--texto-sec);font-size:13px;border-bottom:1px solid var(--borda);">Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="u in usuarios" :key="u.usuario">
-            <td style="padding:10px 12px;border-bottom:1px solid var(--borda);">{{ u.usuario }}</td>
-            <td style="padding:10px 12px;border-bottom:1px solid var(--borda);">{{ u.nome }}</td>
-            <td style="padding:10px 12px;border-bottom:1px solid var(--borda);">
-              <span :style="{background:u.role==='admin'?'var(--aviso)':'var(--primaria)',color:'#fff',padding:'2px 8px',borderRadius:'4px',fontSize:'12px',fontWeight:600}">{{ u.role }}</span>
-            </td>
-            <td style="padding:10px 12px;border-bottom:1px solid var(--borda);">
-              <button @click="handleEditar(u)" :disabled="u.usuario === usuarioLogado" style="background:none;border:none;cursor:pointer;font-size:16px;padding:4px 8px;" :style="{opacity: u.usuario === usuarioLogado ? 0.4 : 1, color: 'var(--primaria)'}">✏️</button>
-              <button @click="handleRemover(u)" :disabled="u.usuario === usuarioLogado" style="background:none;border:none;cursor:pointer;font-size:16px;padding:4px 8px;" :style="{opacity: u.usuario === usuarioLogado ? 0.4 : 1, color: 'var(--erro)'}">✕</button>
-            </td>
-          </tr>
-          <tr v-if="usuarios.length === 0">
-            <td colspan="4" style="padding:20px;text-align:center;color:var(--texto-sec);">Nenhum usuário cadastrado.</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="tabela-wrapper">
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <thead>
+            <tr>
+              <th style="padding:10px 12px;text-align:left;font-weight:600;color:var(--texto-sec);font-size:13px;border-bottom:1px solid var(--borda);">Usuário</th>
+              <th style="padding:10px 12px;text-align:left;font-weight:600;color:var(--texto-sec);font-size:13px;border-bottom:1px solid var(--borda);">Nome</th>
+              <th style="padding:10px 12px;text-align:left;font-weight:600;color:var(--texto-sec);font-size:13px;border-bottom:1px solid var(--borda);">Role</th>
+              <th style="padding:10px 12px;text-align:left;font-weight:600;color:var(--texto-sec);font-size:13px;border-bottom:1px solid var(--borda);">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="u in usuarios" :key="u.usuario">
+              <td style="padding:10px 12px;border-bottom:1px solid var(--borda);">{{ u.usuario }}</td>
+              <td style="padding:10px 12px;border-bottom:1px solid var(--borda);">{{ u.nome }}</td>
+              <td style="padding:10px 12px;border-bottom:1px solid var(--borda);">
+                <span :style="{background:u.role==='admin'?'var(--aviso)':'var(--primaria)',color:'#fff',padding:'2px 8px',borderRadius:'4px',fontSize:'12px',fontWeight:600}">{{ u.role }}</span>
+              </td>
+              <td style="padding:10px 12px;border-bottom:1px solid var(--borda);">
+                <button @click="handleEditar(u)" :disabled="u.usuario === usuarioLogado" class="btn-acao" :style="{opacity: u.usuario === usuarioLogado ? 0.4 : 1, color: 'var(--primaria)'}">✏️</button>
+                <button @click="handleRemover(u)" :disabled="u.usuario === usuarioLogado" class="btn-acao" :style="{opacity: u.usuario === usuarioLogado ? 0.4 : 1, color: 'var(--erro)'}">✕</button>
+              </td>
+            </tr>
+            <tr v-if="usuarios.length === 0">
+              <td colspan="4" style="padding:20px;text-align:center;color:var(--texto-sec);">Nenhum usuário cadastrado.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <div v-if="editando" class="card">
@@ -216,3 +220,44 @@ const tituloForm = computed(() => editandoExistente.value ? 'Editar Usuário' : 
     </div>
   </div>
 </template>
+
+<style scoped>
+.tabela-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.btn-novo-usuario {
+  padding: 6px 14px;
+  background: var(--primaria);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.btn-acao {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 6px 10px;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+.btn-acao:hover {
+  background: var(--bg);
+}
+
+@media (max-width: 600px) {
+  .btn-novo-usuario {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+}
+</style>

@@ -49,12 +49,13 @@ const qrCodePremium = ref('');
 const visitaRegistrada = ref(false);
 
 async function registrarVisita() {
-  if (visitaRegistrada.value || !usuarioAtual.value) return;
+  if (visitaRegistrada.value) return;
   try {
+    const usuario = usuarioAtual.value?.usuario || 'anônimo';
     await fetch('/api/visitas', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ usuario: usuarioAtual.value.usuario })
+      body: JSON.stringify({ usuario })
     });
     visitaRegistrada.value = true;
   } catch {}
@@ -153,6 +154,7 @@ onMounted(async () => {
   });
   verificarSessao();
   navegarHash();
+  registrarVisita();
   setTimeout(() => {
     carregando.value = false;
   }, 200);
