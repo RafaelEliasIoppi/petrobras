@@ -9,8 +9,6 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$Src = Join-Path $PSScriptRoot "petrobras-quimica-study-plan"
-
 if ($Build) {
   Write-Host "npm run build..." -ForegroundColor Cyan
   Push-Location $PSScriptRoot
@@ -18,22 +16,20 @@ if ($Build) {
   Pop-Location
 }
 
-Write-Host "Sincronizando arquivos..." -ForegroundColor Cyan
-$files = @(
-  "server.js"
-  "site/index.html"
-  "site/css/estilo.css"
-  "site/js/app.js"
-  "site/js/usuarios.js"
-)
+Write-Host "Sincronizando dist/ + server.js + planos..." -ForegroundColor Cyan
+$SrcDist = Join-Path $PSScriptRoot "dist"
 
-foreach ($f in $files) {
-  $local = Join-Path $Src $f
-  $remote = $RemotePath + "/" + $f
-  Write-Host "  -> $f"
-  & scp -i "$Key" -q "$local" "${User}@${Hostname}:${remote}"
-  if ($LASTEXITCODE -ne 0) { throw "scp falhou em $f" }
-}
+# Sincroniza a build do Vite
+& rsync -avz --delete -e "ssh -i $Key" "$SrcDist/" "${User}@${Hostname}:${RemotePath}/dist/"
+if ($LASTEXITCODE -ne 0) { throw "rsync dist/ falhou" }
+
+# Sincroniza server.js
+& scp -i "$Key" -q "$PSScriptRoot/server.js" "${User}@${Hostname}:${RemotePath}/server.js"
+if ($LASTEXITCODE -ne 0) { throw "scp server.js falhou" }
+
+# Sincroniza planos/
+& rsync -avz --delete -e "ssh -i $Key" "$PSScriptRoot/petrobras-quimica-study-plan/planos/" "${User}@${Hostname}:${RemotePath}/planos/"
+if ($LASTEXITCODE -ne 0) { throw "rsync planos/ falhou" }
 
 if (-not $SkipRestart) {
   Write-Host "Reiniciando servico..." -ForegroundColor Cyan

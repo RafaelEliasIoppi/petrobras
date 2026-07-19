@@ -1,45 +1,27 @@
-param([switch]$NoFrontend)
-
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$Site = Join-Path $Root "petrobras-quimica-study-plan"
+$VitePort = 5173 # Porta padrão do Vite
 
-Write-Host "== Iniciando Petrobras Study Tracker ==" -ForegroundColor Cyan
+Write-Host "== Iniciando Aplicação Vite (Petrobras Study Tracker) ==" -ForegroundColor Cyan
 
-# Mata processo na porta 3000 antes de tudo
-$pids = Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue |
+# Mata processo na porta do Vite, se houver
+$pids = Get-NetTCPConnection -LocalPort $VitePort -ErrorAction SilentlyContinue |
   Select-Object -ExpandProperty OwningProcess -Unique
 foreach ($processId in $pids) {
-  Write-Host "Encerrando processo na porta 3000 (PID: $processId)..." -ForegroundColor Yellow
+  Write-Host "Encerrando processo na porta $VitePort (PID: $processId)..." -ForegroundColor Yellow
   Stop-Process -Id $processId -Force -ErrorAction SilentlyContinue
 }
-Start-Sleep -Milliseconds 500
+Start-Sleep -Milliseconds 200
 
-function Install-Deps($Dir, $Label) {
-  if (-not (Test-Path (Join-Path $Dir "node_modules"))) {
-    Write-Host "Instalando dependencias ($Label)..." -ForegroundColor Yellow
-    Push-Location $Dir
-    npm install
-    Pop-Location
-  }
+# Instala dependências se a pasta node_modules não existir
+if (-not (Test-Path (Join-Path $Root "node_modules"))) {
+  Write-Host "Instalando dependências do projeto Vite..." -ForegroundColor Yellow
+  Push-Location $Root
+  npm install
+  Pop-Location
 }
 
-Install-Deps $Site "Express"
-if (-not $NoFrontend) { Install-Deps $Root "Vite" }
-
-# Inicia Express
-$serverJob = Start-Job -ScriptBlock {
-  param($pasta)
-  Set-Location $pasta
-  node server.js
-} -ArgumentList $Site
-
-if ($NoFrontend) {
-  Wait-Job $serverJob | Out-Null
-} else {
-  Write-Host "Servidor: http://localhost:3000" -ForegroundColor Green
-  Start-Process "http://localhost:3000"
-  Write-Host "Pressione qualquer tecla para parar tudo." -ForegroundColor Gray
-  $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") | Out-Null
-  Stop-Job $serverJob
-  Remove-Job $serverJob
-}
+# Navega para o diretório raiz e inicia o servidor de desenvolvimento Vite
+Write-Host "Iniciando servidor de desenvolvimento Vite..." -ForegroundColor Green
+Write-Host "Pressione CTRL+C para parar o servidor." -ForegroundColor Gray
+Set-Location $Root
+npm run dev

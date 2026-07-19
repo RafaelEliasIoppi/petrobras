@@ -91,6 +91,7 @@ async function handleLogin(usuario, senha) {
     localStorage.setItem(SESSAO_KEY, JSON.stringify(sessao));
   } else {
     erroLogin.value = true;
+  }
 }
 
 function logout() {

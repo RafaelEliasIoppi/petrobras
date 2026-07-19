@@ -25,21 +25,15 @@ App para concurso Petrobras - Tecnico em Quimica. Duas implementacoes:
 ├── *.vue                        # Componentes (Dashboard, Ciclo, Diario, Relatorio, etc.)
 ├── Login.vue                    # Tela de login com toggle senha (icone 🔒/👁)
 ├── estilo.css                   # CSS global
-├── .github/workflows/deploy.yml # CI: deploy site/ → gh-pages
-├── start.ps1                    # Script PowerShell pra subir Express
+├── .github/workflows/deploy.yml # CI: build Vite → gh-pages
+├── start.ps1                    # Script PowerShell pra dev (npm run dev)
+├── server.js                    # Express (porta 3000, serve dist/ + API planos)
+├── deploy.ps1                   # Sincroniza build + server + planos pra VM
 │
-petrobras-quimica-study-plan/    # Site estatico + servidor
-├── server.js                    # Express (porta 3000)
-├── start.sh
+petrobras-quimica-study-plan/    # Dados + scripts servidor
+├── start.sh                     # Builda Vite + sobe Express (usado na VM)
+├── setup-vm.sh                  # Instala Node/Nginx/systemd na VM
 ├── dados/                       # JSON files (persistencia servidor)
-├── site/
-│   ├── index.html               # SPA (Vue CDN)
-│   ├── css/estilo.css
-│   └── js/
-│       ├── app.js               # Instancia Vue + composables
-│       ├── dados.js             # Dados (identico ao root)
-│       ├── usuarios.js          # Autenticacao
-│       └── armazenamento.js     # localStorage + API com debounce
 └── planos/                      # Documentos .md
 ```
 
