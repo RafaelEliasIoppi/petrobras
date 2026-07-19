@@ -2,17 +2,16 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import QRCode from 'qrcode';
 import { gerarPayloadPix } from './pix.js';
+import PasswordInput from './PasswordInput.vue';
 import PremiumCheckout from './PremiumCheckout.vue';
 
 const props = defineProps({
   erro: Boolean,
 });
-
 const emit = defineEmits(['tentativa-login']);
 
 const usuarioDigitado = ref('');
 const senhaDigitada = ref('');
-const mostrarSenha = ref(false);
 const mostrarSenhaCadastro = ref(false);
 const instrucaoPremium = ref(false);
 const qrCodeUrl = ref('');
@@ -240,23 +239,13 @@ function voltarParaLogin() {
                 <input id="usuario" v-model="usuarioDigitado" type="text" placeholder="Seu nome de usuário" class="input-field" autofocus autocomplete="username" />
                 <span class="input-icon">👤</span>
               </div>
-              <div class="input-group">
-                <label for="senha">Senha</label>
-                <div class="campo-senha">
-                  <span class="input-icon">🔒</span>
-                  <input id="senha" v-model="senhaDigitada" :type="mostrarSenha ? 'text' : 'password'" placeholder="Sua senha" class="input-field" autocomplete="current-password" />
-                  <button type="button" class="olho-senha" @click="mostrarSenha = !mostrarSenha" :aria-label="mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'">
-                    <svg class="olho-icon olho-aberto" :class="{ soma: mostrarSenha }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                    </svg>
-                    <svg class="olho-icon olho-fechado" :class="{ soma: !mostrarSenha }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-                      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-                      <line x1="1" y1="1" x2="23" y2="23"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
+              <PasswordInput
+                id="senha"
+                label="Senha"
+                v-model="senhaDigitada"
+                placeholder="Sua senha"
+                autocomplete="current-password"
+              />
               <button type="submit" class="btn-entrar">
                 <span>Entrar</span>
                 <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -277,30 +266,20 @@ function voltarParaLogin() {
                 <input id="cad-nome" v-model="cadastroNome" type="text" placeholder="Seu nome completo" class="input-field" autocomplete="name" />
                 <span class="input-icon">📝</span>
               </div>
-              <div class="input-group">
-                <label for="cad-senha">Senha</label>
-                <div class="campo-senha">
-                  <span class="input-icon">🔒</span>
-                  <input id="cad-senha" v-model="cadastroSenha" :type="mostrarSenhaCadastro ? 'text' : 'password'" placeholder="Mínimo 3 caracteres" class="input-field" autocomplete="new-password" />
-                  <button type="button" class="olho-senha" @click="mostrarSenhaCadastro = !mostrarSenhaCadastro" :aria-label="mostrarSenhaCadastro ? 'Ocultar senha' : 'Mostrar senha'">
-                    <svg class="olho-icon olho-aberto" :class="{ soma: mostrarSenhaCadastro }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                    </svg>
-                    <svg class="olho-icon olho-fechado" :class="{ soma: !mostrarSenhaCadastro }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-                      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-                      <line x1="1" y1="1" x2="23" y2="23"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              <div class="input-group">
-                <label for="cad-confirmar">Confirmar Senha</label>
-                <div class="campo-senha">
-                  <span class="input-icon">🔒</span>
-                  <input id="cad-confirmar" v-model="cadastroConfirmar" type="password" placeholder="Repita a senha" class="input-field" />
-                </div>
-              </div>
+              <PasswordInput
+                id="cad-senha"
+                label="Senha"
+                v-model="cadastroSenha"
+                placeholder="Mínimo 3 caracteres"
+                autocomplete="new-password"
+              />
+              <PasswordInput
+                id="cad-confirmar"
+                label="Confirmar Senha"
+                v-model="cadastroConfirmar"
+                placeholder="Repita a senha"
+                autocomplete="new-password"
+              />
               <button type="submit" class="btn-entrar" :disabled="cadastroLoading">
                 <span>{{ cadastroLoading ? 'Cadastrando...' : 'Criar Conta' }}</span>
               </button>
@@ -1049,9 +1028,6 @@ function voltarParaLogin() {
   }
   .login-brand {
     display: none;
-  }
-  .login-wrapper {
-    align-items: flex-start; /* Alinha o conteúdo ao topo em telas pequenas */
   }
   .login-right {
     max-width: 100%;

@@ -715,6 +715,14 @@ onMounted(() => {
   .flashcard-text {
     font-size: 18px;
   }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-actions .btn-primary, .form-actions .btn-secondary {
+    width: 100%;
+  }
 }
 
 @media (max-width: 600px) {
@@ -734,6 +742,10 @@ onMounted(() => {
   .btn-acertou, .btn-errei {
     width: 100%;
     justify-content: center;
+  }
+
+  .flashcard-ask {
+    display: none;
   }
 }
 
