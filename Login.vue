@@ -128,21 +128,45 @@ function voltarParaLogin() {
     </div>
     <div class="login-container">
       <div class="login-brand">
-        <div class="brand-icon">📘</div>
-        <h1 class="brand-title">Petrobras 2026</h1>
-        <p class="brand-subtitle">Técnico em Química • Cesgranrio</p>
+        <div class="brand-badge">🔥 Edital 2026</div>
+        <h1 class="brand-title">Petrobras<br>Técnico em Química</h1>
+        <p class="brand-subtitle">Cesgranrio • 1.000+ vagas previstas</p>
+        <div class="brand-highlight">
+          <div class="highlight-item">
+            <span class="highlight-value">R$ 6.638</span>
+            <span class="highlight-label">Salário inicial</span>
+          </div>
+          <div class="highlight-divider"></div>
+          <div class="highlight-item">
+            <span class="highlight-value">+ Benefícios</span>
+            <span class="highlight-label">PLR, VA, VT, saúde</span>
+          </div>
+          <div class="highlight-divider"></div>
+          <div class="highlight-item">
+            <span class="highlight-value">Até R$ 11.300</span>
+            <span class="highlight-label">Com adicional de turno</span>
+          </div>
+        </div>
         <div class="brand-features">
           <div class="feature-item">
-            <span class="feature-icon">🎯</span>
-            <span>Plano de estudos inteligente</span>
+            <span class="feature-icon">🧪</span>
+            <span><strong>Conteúdo específico</strong> — Bloco I, II e III de Química</span>
           </div>
           <div class="feature-item">
             <span class="feature-icon">🧠</span>
-            <span>Flashcards com revisão espaçada</span>
+            <span><strong>Flashcards inteligentes</strong> — Revisão espaçada das reações</span>
           </div>
           <div class="feature-item">
             <span class="feature-icon">📊</span>
-            <span>Métricas e relatórios de progresso</span>
+            <span><strong>Métricas de performance</strong> — Seu progresso em tempo real</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon">🎯</span>
+            <span><strong>Simulados Cesgranrio</strong> — Mesmo estilo da prova oficial</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon">📕</span>
+            <span><strong>Caderno de Erros</strong> — Transforme falhas em acertos</span>
           </div>
         </div>
       </div>
@@ -478,26 +502,79 @@ function voltarParaLogin() {
   animation: slideUp 0.8s ease-out;
 }
 
-.brand-icon {
-  font-size: 48px;
+.brand-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(245,158,11,0.15);
+  border: 1px solid rgba(245,158,11,0.3);
+  color: #f59e0b;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   margin-bottom: 16px;
+  animation: slideUp 0.8s ease-out;
 }
 
 .brand-title {
-  font-size: 36px;
+  font-size: 40px;
   font-weight: 800;
   letter-spacing: -1px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   background: linear-gradient(135deg, #6366f1, #06b6d4);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  line-height: 1.1;
 }
 
 .brand-subtitle {
   font-size: 16px;
   color: rgba(255,255,255,0.65);
-  margin-bottom: 40px;
+  margin-bottom: 24px;
+}
+
+.brand-highlight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 28px;
+  animation: slideUp 0.8s ease-out 0.1s both;
+}
+
+.highlight-item {
+  flex: 1;
+  text-align: center;
+}
+
+.highlight-value {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  color: #10b981;
+  margin-bottom: 2px;
+}
+
+.highlight-label {
+  display: block;
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.highlight-divider {
+  width: 1px;
+  height: 36px;
+  background: rgba(255,255,255,0.1);
+  flex-shrink: 0;
 }
 
 .brand-features {
@@ -516,9 +593,11 @@ function voltarParaLogin() {
   opacity: 0;
 }
 
-.feature-item:nth-child(1) { animation-delay: 0.2s; }
-.feature-item:nth-child(2) { animation-delay: 0.3s; }
-.feature-item:nth-child(3) { animation-delay: 0.4s; }
+.feature-item:nth-child(1) { animation-delay: 0.15s; }
+.feature-item:nth-child(2) { animation-delay: 0.25s; }
+.feature-item:nth-child(3) { animation-delay: 0.35s; }
+.feature-item:nth-child(4) { animation-delay: 0.45s; }
+.feature-item:nth-child(5) { animation-delay: 0.55s; }
 
 .feature-icon {
   font-size: 20px;

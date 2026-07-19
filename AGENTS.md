@@ -57,6 +57,41 @@ petrobras-quimica-study-plan/    # Dados + scripts servidor
 2. **localStorage** — `_salvarLocal()` com prefixo `petrobras_quimica_`
 3. **Servidor** — `_putToServer()` com debounce 1s
 
+## Responsividade
+- **Breakpoints**: 1024px, 768px, 600px, **480px**
+- 480px adicionado em: Login.vue, estilo.css, Diario.vue, Flashcards.vue, Erros.vue, Relatorio.vue, Ciclo.vue, Exercicios.vue, App.vue
+- **Checklist tabs**: em 480px viram scroll horizontal (`overflow-x: auto; flex-wrap: nowrap`)
+- **Login 480px**: brand escondido, card ocupa tela toda, depoimentos 1 coluna, social-notification sem `nowrap`
+- **Sidebar backdrop**: div `.sidebar-backdrop` em App.vue, visivel quando `menuAberta` em mobile, clica pra fechar
+
+## CSS Global
+- `estilo.css` importado em `main.js` (`import './estilo.css'`) — essencial para o funcionamento do CSS interno
+- Sem essa importação, todas as páginas internas (Dashboard, Horas, etc.) ficam sem estilo
+
+## Login
+- `submeter()` em Login.vue chama `.trim()` no usuário e senha para ignorar espaços
+- Admin senha: `_[D1W)6hOO0h[R1/` (hash SHA-256: `a6035b25e8694b3ccef86d66b713e003340782642f8876a1a9fc738724eaa8e6`)
+- Se alterar hash do admin em usuarios.js, a funcao `carregarUsuarios()` detecta e força o update no localStorage
+
+## Premium Overlay (unificado)
+- **Login.vue**: fluxo PIX/QR inline no card (instrucaoPremium toggle)
+- **App.vue**: overlay modal com MESMO layout (PIX/QR + WhatsApp + Voltar)
+- Ambos usam `qrcode` lib + `gerarPayloadPix()` pra gerar QR Code
+- WhatsApp: `wa.me/5551983098650?text=...pagamento Premium (PIX)...`
+- Preco: R$ 49,90, chave PIX: +5551983098650
+
+## Admin - Dashboard de Visitas
+- Servidor: POST `/api/visitas` grava visita, GET `/api/visitas` retorna total/hoje/ultimas 100
+- Storage: `dados/visitas.json` no servidor
+- Client: `registrarVisita()` chamada no login + onMount no App.vue
+- Admin.vue exibe cards de total/hoje + tabela com usuario/data/hora
+
+## Login Page Brand
+- Badge "🔥 Edital 2026" no topo
+- Destaque salarial: R$ 6.638 inicial, + benefícios, até R$ 11.300 com turno
+- 5 features focadas no concurso (conteúdo específico, flashcards, métricas, simulados Cesgranrio, caderno de erros)
+- Highlight box com vidro (glassmorphism) exibindo faixas salariais
+
 ## Memorias Fixas (nao errar de novo)
 - **Site estatico** (`site/index.html`): SEMPRE incluir `<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>` ANTES dos scripts locais (dados.js, armazenamento.js, app.js). A versao Vite (raiz) nao precisa, mas o site estatico sim.
 - **Cache busting**: ao alterar CSS/JS, atualizar `?v=` nos links. Usar data + letra (ex: `20260718a`).
@@ -104,8 +139,6 @@ petrobras-quimica-study-plan/    # Dados + scripts servidor
 - `iniciarSocialProof()` — intervalo aleatório 4-8s, notificação some após 5s
 - `depoimentos` — array de 10 depoimentos com nome, avatar, texto e estrelas
 - Exibidos na tela de login (grade 4 cards) e na página Premium (grade completa)
-
-## Padroes
 
 ## CI/CD
 - `.github/workflows/deploy.yml` — push no main → copia site/ → deploy no gh-pages
