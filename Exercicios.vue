@@ -198,4 +198,14 @@ function materiaCor(nome) {
     font-size: 13px !important;
   }
 }
+
+@media (max-width: 480px) {
+  .alternativa {
+    padding: 8px 10px !important;
+    font-size: 12px !important;
+  }
+  .questao-card {
+    padding: 12px !important;
+  }
+}
 </style>

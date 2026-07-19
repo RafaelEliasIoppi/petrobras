@@ -525,4 +525,28 @@ function formatarHoras(h) {
   .log-nome { flex: 1 1 100%; order: -1; }
   .log-horas { min-width: auto; }
 }
+
+@media (max-width: 480px) {
+  .grade-materias {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .btn-materia {
+    padding: 8px 6px;
+    font-size: 11px;
+  }
+  .add-painel {
+    flex-direction: column;
+  }
+  .log-nome { flex: 1 1 100%; }
+  .item-revisao {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .revisao-acoes { width: 100%; }
+  .btn-concluir, .btn-remover { flex: 1; text-align: center; }
+  .acoes-rapidas-grid {
+    grid-template-columns: 1fr;
+  }
+}
 </style>

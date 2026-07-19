@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useAdmin } from './useAdmin.js';
 
 const props = defineProps({ usuarioLogado: String });
@@ -9,6 +9,24 @@ const {
   carregarUsuarios, novoUsuario, editarUsuario, salvarUsuario,
   removerUsuario, cancelarEdicao
 } = useAdmin();
+
+const visitas = ref([]);
+const totalVisitas = ref(0);
+const visitasHoje = ref(0);
+
+async function carregarVisitas() {
+  try {
+    const r = await fetch('/api/visitas');
+    const data = await r.json();
+    totalVisitas.value = data.total;
+    visitasHoje.value = data.hoje;
+    visitas.value = data.visitas || [];
+  } catch {}
+}
+
+onMounted(() => {
+  carregarVisitas();
+});
 
 const formUsuario = ref('');
 const formNome = ref('');
@@ -97,6 +115,37 @@ const tituloForm = computed(() => editandoExistente.value ? 'Editar Usuário' : 
         <div class="valor">{{ usuariosComuns }}</div>
         <div class="rotulo">Usuários</div>
       </div>
+      <div class="cartao-stat verde">
+        <div class="valor">{{ totalVisitas }}</div>
+        <div class="rotulo">Total de visitas</div>
+      </div>
+      <div class="cartao-stat laranja">
+        <div class="valor">{{ visitasHoje }}</div>
+        <div class="rotulo">Visitas hoje</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-titulo">📊 Últimas Visitas</div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr>
+            <th style="padding:8px 10px;text-align:left;font-weight:600;color:var(--texto-sec);border-bottom:1px solid var(--borda);">Usuário</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:600;color:var(--texto-sec);border-bottom:1px solid var(--borda);">Data</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:600;color:var(--texto-sec);border-bottom:1px solid var(--borda);">Hora</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="v in visitas" :key="v.timestamp">
+            <td style="padding:8px 10px;border-bottom:1px solid var(--borda);">{{ v.usuario }}</td>
+            <td style="padding:8px 10px;border-bottom:1px solid var(--borda);">{{ v.data }}</td>
+            <td style="padding:8px 10px;border-bottom:1px solid var(--borda);">{{ v.hora }}</td>
+          </tr>
+          <tr v-if="visitas.length === 0">
+            <td colspan="3" style="padding:20px;text-align:center;color:var(--texto-sec);">Nenhuma visita registrada ainda.</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <div class="card">

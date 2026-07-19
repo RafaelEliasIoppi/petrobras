@@ -107,7 +107,7 @@ onUnmounted(() => {
 });
 
 function submeter() {
-  emit('tentativa-login', usuarioDigitado.value, senhaDigitada.value);
+  emit('tentativa-login', usuarioDigitado.value.trim(), senhaDigitada.value.trim());
 }
 
 function abrirLinkPremium() {
@@ -146,110 +146,112 @@ function voltarParaLogin() {
           </div>
         </div>
       </div>
-      <div class="login-card">
-        <div class="login-card-header">
-          <template v-if="!instrucaoPremium">
-            <h2>Acessar Plataforma</h2>
-            <p>Informe suas credenciais de acesso.</p>
-          </template>
-          <template v-else>
-            <h2>Pagamento Premium</h2>
-            <p>Escaneie o QR Code abaixo com o app do seu banco.</p>
-          </template>
-        </div>
-
-        <div v-if="instrucaoPremium" class="instrucao-premium">
-          <button @click="voltarParaLogin" class="btn-fechar" aria-label="Fechar">✕</button>
-          <div class="pix-qr-wrapper">
-            <div class="pix-value">👑 Premium — R$ 49,90</div>
-            <img v-if="qrCodeUrl" :src="qrCodeUrl" alt="QR Code PIX" class="pix-qr" />
-            <div v-else class="pix-loading">Gerando QR Code...</div>
-            <div class="pix-label">Escaneie com o app do seu banco</div>
+      <div class="login-right">
+        <div class="login-card">
+          <div class="login-card-header">
+            <template v-if="!instrucaoPremium">
+              <h2>Acessar Plataforma</h2>
+              <p>Informe suas credenciais de acesso.</p>
+            </template>
+            <template v-else>
+              <h2>Pagamento Premium</h2>
+              <p>Escaneie o QR Code abaixo com o app do seu banco.</p>
+            </template>
           </div>
-          <p class="pix-help">Após o pagamento, envie o comprovante no WhatsApp para receber seu acesso:</p>
-          <a href="https://wa.me/5551983098650?text=Ol%C3%A1!%20Realizei%20o%20pagamento%20Premium%20(PIX)%20e%20gostaria%20de%20receber%20meu%20acesso." target="_blank" class="btn-whatsapp">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-            Enviar Comprovante
-          </a>
-          <button @click="voltarParaLogin" class="btn-voltar">← Voltar para o Login</button>
-        </div>
 
-        <form v-else @submit.prevent="submeter" class="login-form">
-          <div class="input-group">
-            <label for="usuario">Usuário</label>
-            <input
-              id="usuario"
-              v-model="usuarioDigitado"
-              type="text"
-              placeholder="Seu nome de usuário"
-              class="input-field"
-              autofocus
-              autocomplete="username"
-            />
-            <span class="input-icon">👤</span>
+          <div v-if="instrucaoPremium" class="instrucao-premium">
+            <button @click="voltarParaLogin" class="btn-fechar" aria-label="Fechar">✕</button>
+            <div class="pix-qr-wrapper">
+              <div class="pix-value">👑 Premium — R$ 49,90</div>
+              <img v-if="qrCodeUrl" :src="qrCodeUrl" alt="QR Code PIX" class="pix-qr" />
+              <div v-else class="pix-loading">Gerando QR Code...</div>
+              <div class="pix-label">Escaneie com o app do seu banco</div>
+            </div>
+            <p class="pix-help">Após o pagamento, envie o comprovante no WhatsApp para receber seu acesso:</p>
+            <a href="https://wa.me/5551983098650?text=Ol%C3%A1!%20Realizei%20o%20pagamento%20Premium%20(PIX)%20e%20gostaria%20de%20receber%20meu%20acesso." target="_blank" class="btn-whatsapp">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              Enviar Comprovante
+            </a>
+            <button @click="voltarParaLogin" class="btn-voltar">← Voltar para o Login</button>
           </div>
-          <div class="input-group">
-            <label for="senha">Senha</label>
-            <div class="campo-senha">
+
+          <form v-else @submit.prevent="submeter" class="login-form">
+            <div class="input-group">
+              <label for="usuario">Usuário</label>
               <input
-                id="senha"
-                v-model="senhaDigitada"
-                :type="mostrarSenha ? 'text' : 'password'"
-                placeholder="Sua senha"
+                id="usuario"
+                v-model="usuarioDigitado"
+                type="text"
+                placeholder="Seu nome de usuário"
                 class="input-field"
-                autocomplete="current-password"
+                autofocus
+                autocomplete="username"
               />
-              <button
-                type="button"
-                class="olho-senha"
-                @click="mostrarSenha = !mostrarSenha"
-                :aria-label="mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'"
-              >
-                <svg class="olho-icon olho-aberto" :class="{ soma: mostrarSenha }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
-                <svg class="olho-icon olho-fechado" :class="{ soma: !mostrarSenha }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-                  <line x1="1" y1="1" x2="23" y2="23"/>
-                </svg>
-              </button>
+              <span class="input-icon">👤</span>
             </div>
-          </div>
-          <button type="submit" class="btn-entrar">
-            <span>Entrar</span>
-            <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
-          </button>
-          <p v-if="props.erro" class="msg-erro">
-            ⚠ Usuário ou senha inválidos. Tente novamente.
-          </p>
-        </form>
-        <div class="login-card-footer">
-          <div v-if="!instrucaoPremium" class="login-premium-cta">
-            <button @click="abrirLinkPremium" class="login-premium-link">
-              👑 Seja Premium — <strong>R$ 49,90</strong>
+            <div class="input-group">
+              <label for="senha">Senha</label>
+              <div class="campo-senha">
+                <input
+                  id="senha"
+                  v-model="senhaDigitada"
+                  :type="mostrarSenha ? 'text' : 'password'"
+                  placeholder="Sua senha"
+                  class="input-field"
+                  autocomplete="current-password"
+                />
+                <button
+                  type="button"
+                  class="olho-senha"
+                  @click="mostrarSenha = !mostrarSenha"
+                  :aria-label="mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'"
+                >
+                  <svg class="olho-icon olho-aberto" :class="{ soma: mostrarSenha }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  <svg class="olho-icon olho-fechado" :class="{ soma: !mostrarSenha }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <button type="submit" class="btn-entrar">
+              <span>Entrar</span>
+              <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
             </button>
-            <span class="login-premium-sub">Pagamento único • Acesso vitalício • Pix</span>
-          </div>
-          <p>Conta de demonstração: <strong>estudante</strong> / <strong>petro2026</strong></p>
-        </div>
-      </div>
-
-      <div class="depoimentos-section">
-        <div class="depoimentos-grid">
-          <div v-for="(d, i) in depoimentos.slice(0, 4)" :key="i" class="depoimento-card">
-            <div class="depoimento-stars">
-              <svg v-for="s in d.estrelas" :key="s" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <p v-if="props.erro" class="msg-erro">
+              ⚠ Usuário ou senha inválidos. Tente novamente.
+            </p>
+          </form>
+          <div class="login-card-footer">
+            <div v-if="!instrucaoPremium" class="login-premium-cta">
+              <button @click="abrirLinkPremium" class="login-premium-link">
+                👑 Seja Premium — <strong>R$ 49,90</strong>
+              </button>
+              <span class="login-premium-sub">Pagamento único • Acesso vitalício • Pix</span>
             </div>
-            <p class="depoimento-texto">"{{ d.texto }}"</p>
-            <div class="depoimento-footer">
-              <div class="depoimento-avatar">{{ d.nome.charAt(0) }}</div>
-              <div class="depoimento-info">
-                <strong>{{ d.nome }}</strong>
-                <span>{{ d.cidade }}</span>
+            <p>Conta de demonstração: <strong>estudante</strong> / <strong>petro2026</strong></p>
+          </div>
+        </div>
+
+        <div class="depoimentos-section">
+          <div class="depoimentos-grid">
+            <div v-for="(d, i) in depoimentos.slice(0, 4)" :key="i" class="depoimento-card">
+              <div class="depoimento-stars">
+                <svg v-for="s in d.estrelas" :key="s" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              </div>
+              <p class="depoimento-texto">"{{ d.texto }}"</p>
+              <div class="depoimento-footer">
+                <div class="depoimento-avatar">{{ d.nome.charAt(0) }}</div>
+                <div class="depoimento-info">
+                  <strong>{{ d.nome }}</strong>
+                  <span>{{ d.cidade }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -453,13 +455,21 @@ function voltarParaLogin() {
 
 .login-container {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 60px;
   position: relative;
   z-index: 1;
   padding: 40px;
-  max-width: 960px;
+  max-width: 1050px;
   width: 100%;
+}
+
+.login-right {
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex-shrink: 0;
 }
 
 .login-brand {
@@ -772,7 +782,6 @@ function voltarParaLogin() {
 
 .depoimentos-section {
   width: 100%;
-  max-width: 780px;
 }
 
 .depoimentos-grid {
@@ -895,6 +904,7 @@ function voltarParaLogin() {
     flex-direction: column;
     gap: 32px;
     padding: 24px;
+    align-items: center;
   }
 
   .login-brand {
@@ -907,6 +917,11 @@ function voltarParaLogin() {
 
   .brand-features {
     display: none;
+  }
+
+  .login-right {
+    width: 100%;
+    max-width: 400px;
   }
 
   .login-card {
@@ -954,5 +969,92 @@ function voltarParaLogin() {
     padding: 12px;
     font-size: 15px;
   }
+}
+
+@media (max-width: 480px) {
+  .login-container {
+    padding: 10px;
+    gap: 16px;
+    min-height: 100vh;
+    justify-content: flex-start;
+    padding-top: 20px;
+  }
+  .login-brand {
+    display: none;
+  }
+  .login-right {
+    max-width: 100%;
+  }
+  .login-card {
+    padding: 20px 14px;
+    border-radius: 14px;
+  }
+  .login-card-header {
+    margin-bottom: 24px;
+  }
+  .login-card-header h2 {
+    font-size: 17px;
+  }
+  .login-card-header p {
+    font-size: 13px;
+  }
+  .input-field {
+    padding: 11px 12px 11px 38px;
+    font-size: 14px;
+  }
+  .input-icon {
+    bottom: 12px;
+    left: 12px;
+  }
+  .olho-senha {
+    right: 4px;
+    width: 30px;
+    height: 30px;
+  }
+  .olho-icon {
+    width: 16px;
+    height: 16px;
+  }
+  .btn-entrar {
+    padding: 11px;
+    font-size: 14px;
+  }
+  .login-premium-link {
+    padding: 12px;
+    font-size: 14px;
+  }
+  .login-premium-sub {
+    font-size: 10px;
+  }
+  .login-card-footer p {
+    font-size: 11px;
+  }
+  .pix-qr {
+    width: 160px;
+    height: 160px;
+  }
+  .pix-value {
+    font-size: 17px;
+  }
+  .social-notification {
+    white-space: normal;
+    max-width: calc(100vw - 32px);
+    font-size: 12px;
+    padding: 10px 14px;
+    bottom: 16px;
+    text-align: center;
+  }
+  .depoimentos-grid {
+    grid-template-columns: 1fr;
+  }
+  .depoimento-card {
+    padding: 14px;
+  }
+  .depoimento-texto {
+    font-size: 12px;
+  }
+  .bg-shape-1 { width: 200px; height: 200px; }
+  .bg-shape-2 { width: 140px; height: 140px; }
+  .bg-shape-3 { width: 100px; height: 100px; }
 }
 </style>

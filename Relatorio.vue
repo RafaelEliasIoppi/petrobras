@@ -282,4 +282,33 @@ const {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+@media (max-width: 480px) {
+  .dias-grid {
+    grid-template-columns: 1fr;
+  }
+  .dia-card {
+    padding: 10px;
+  }
+  .dia-rotulo {
+    font-size: 11px;
+  }
+  .rec-item {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+  .ciclo-grid {
+    grid-template-columns: 1fr;
+  }
+  .materia-row-header {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .materia-row-nome {
+    font-size: 13px;
+  }
+  .materia-row-horas {
+    font-size: 13px;
+  }
+}
 </style>

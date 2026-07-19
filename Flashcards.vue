@@ -736,4 +736,24 @@ onMounted(() => {
     justify-content: center;
   }
 }
+
+@media (max-width: 480px) {
+  .flashcard-front,
+  .flashcard-back {
+    padding: 20px 16px;
+  }
+  .flashcard-text {
+    font-size: 15px;
+  }
+  .flashcard-toolbar {
+    flex-direction: column;
+  }
+  .flashcard-toolbar button {
+    width: 100%;
+    justify-content: center;
+  }
+  .flashcard-progresso {
+    font-size: 12px;
+  }
+}
 </style>

@@ -635,4 +635,12 @@ function tipoLabel(t) {
 @media (max-width: 600px) {
   .caderno-tabela { min-width: 600px; font-size: 11px; }
 }
+
+@media (max-width: 480px) {
+  .caderno-tabela { min-width: 480px; font-size: 10px; }
+  .caderno-tabela th,
+  .caderno-tabela td { padding: 4px 4px; }
+  .caderno-titulo { font-size: 16px; }
+  .form-grid { grid-template-columns: 1fr; gap: 8px; }
+}
 </style>

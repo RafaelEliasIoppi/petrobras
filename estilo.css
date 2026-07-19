@@ -675,6 +675,99 @@ body {
   }
 }
 
+@media (max-width: 480px) {
+  .conteudo {
+    padding: 8px 6px;
+  }
+  .topo {
+    margin-bottom: 10px;
+  }
+  .topo h2 {
+    font-size: 14px;
+  }
+  .topo .sub {
+    font-size: 10px;
+  }
+  .grade-cartoes {
+    gap: 8px;
+  }
+  .cartao-stat {
+    padding: 10px 8px;
+  }
+  .cartao-stat .valor {
+    font-size: 18px;
+  }
+  .cartao-stat .rotulo {
+    font-size: 10px;
+  }
+  .card {
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+  }
+  .card-titulo {
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+  .card select {
+    font-size: 13px;
+    padding: 6px;
+  }
+  .tabela-horas, .tabela-simulados, .tabela-erros {
+    font-size: 9px;
+  }
+  .tabela-horas th, .tabela-horas td,
+  .tabela-simulados th, .tabela-simulados td,
+  .tabela-erros th, .tabela-erros td {
+    padding: 4px 4px;
+  }
+  .tabela-horas td input {
+    width: 32px;
+    padding: 2px 3px;
+    font-size: 10px;
+  }
+  .form-simulado input, .form-simulado button,
+  .form-erro input, .form-erro button,
+  .form-erro select, .form-erro textarea {
+    font-size: 12px;
+    padding: 6px;
+  }
+  .checklist-tab {
+    font-size: 11px;
+    padding: 8px 10px;
+  }
+  .grupo-titulo {
+    font-size: 11px;
+  }
+  .item-check {
+    font-size: 11px;
+  }
+  .navegacao-semanas button {
+    font-size: 11px;
+    padding: 5px 8px;
+  }
+  .ciclo-item {
+    padding: 8px;
+    font-size: 11px;
+  }
+  .checklist-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    gap: 4px;
+    padding: 4px;
+  }
+  .checklist-tab {
+    flex: 0 0 auto;
+    padding: 8px 10px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .checklist-tab .tab-progress {
+    font-size: 10px;
+  }
+}
+
 select {
   max-width: 100%;
 }

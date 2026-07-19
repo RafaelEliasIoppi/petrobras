@@ -10,7 +10,7 @@ const app = express();
 const port = 3000;
 
 app.use((req, res, next) => {
-  res.setHeader('Content-Security-Policy', "default-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self';");
+  res.setHeader('Content-Security-Policy', "default-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval' data:; img-src 'self' data:; font-src 'self';");
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
@@ -24,7 +24,47 @@ if (!fs.existsSync(frontendDistPath)) {
   console.error("Execute 'npm run build' primeiro.\n");
 }
 
+app.use(express.json());
 app.use(express.static(frontendDistPath));
+
+const visitasPath = path.join(__dirname, 'dados', 'visitas.json');
+
+function lerVisitas() {
+  try {
+    if (!fs.existsSync(visitasPath)) return [];
+    return JSON.parse(fs.readFileSync(visitasPath, 'utf-8'));
+  } catch { return []; }
+}
+
+function salvarVisitas(data) {
+  try {
+    const dir = path.dirname(visitasPath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(visitasPath, JSON.stringify(data, null, 2));
+  } catch (e) { console.error('Erro ao salvar visitas:', e); }
+}
+
+app.post('/api/visitas', (req, res) => {
+  const { usuario } = req.body;
+  if (!usuario) return res.status(400).json({ erro: 'usuario é obrigatório' });
+  const visitas = lerVisitas();
+  visitas.push({
+    usuario,
+    data: new Date().toISOString().split('T')[0],
+    hora: new Date().toTimeString().split(' ')[0],
+    timestamp: Date.now()
+  });
+  salvarVisitas(visitas);
+  res.json({ ok: true });
+});
+
+app.get('/api/visitas', (req, res) => {
+  const visitas = lerVisitas();
+  const total = visitas.length;
+  const hoje = new Date().toISOString().split('T')[0];
+  visitas.reverse();
+  res.json({ total, hoje: visitas.filter(v => v.data === hoje).length, visitas: visitas.slice(0, 100) });
+});
 
 app.get('/api/planos', (req, res) => {
   const planosDir = path.join(__dirname, 'petrobras-quimica-study-plan');

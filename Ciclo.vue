@@ -219,4 +219,14 @@ const {
     font-size: 18px;
   }
 }
+
+@media (max-width: 480px) {
+  .cartao-stat .valor {
+    font-size: 16px;
+  }
+  .ciclo-item {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+}
 </style>
