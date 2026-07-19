@@ -1,0 +1,44 @@
+name: Deploy para VM
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Buildar Vite
+        run: npm run build
+
+      - name: Copiar planos para dist
+        run: cp -r petrobras-quimica-study-plan/planos dist/planos
+
+      - name: Instalar chave SSH
+        run: |
+          install -m 600 -D /dev/null ~/.ssh/id_rsa
+          echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/id_rsa
+          ssh-keyscan -H 163.176.163.213 >> ~/.ssh/known_hosts
+
+      - name: Sincronizar dist/
+        run: rsync -avz --delete dist/ ubuntu@163.176.163.213:/opt/petrobras/dist/
+
+      - name: Sincronizar server.js
+        run: scp server.js ubuntu@163.176.163.213:/opt/petrobras/server.js
+
+      - name: Sincronizar planos/
+        run: rsync -avz --delete petrobras-quimica-study-plan/planos/ ubuntu@163.176.163.213:/opt/petrobras/planos/
+
+      - name: Reiniciar servico
+        run: ssh ubuntu@163.176.163.213 "sudo systemctl restart petrobras.service"
